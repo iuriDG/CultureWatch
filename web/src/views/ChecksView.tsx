@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApi } from '../api'
 import { DataTable } from '../components/DataTable'
+import { DateRange, defaultRange, type Range } from '../components/DateRange'
 import { Status } from '../components/Status'
 import { csvCell, date, dateRange, num, shortOrg } from '../format'
 import { useMeta, useT } from '../state'
@@ -9,10 +10,11 @@ import type { CheckCategory, ChecksResp } from '../types'
 const CATEGORIES: CheckCategory[] = ['contradiction', 'impossible', 'confirm']
 
 export function ChecksView() {
-  const { wardName, specimenName } = useMeta()
+  const { meta, wardName, specimenName } = useMeta()
   const { t } = useT()
   const [period, setPeriod] = useState<'4w' | '12m' | ''>('12m')
-  const { data, error, loading } = useApi<ChecksResp>('/api/checks', { window: period })
+  const [range, setRange] = useState<Range | null>(null)
+  const { data, error, loading } = useApi<ChecksResp>('/api/checks', range ? { date_from: range[0], date_to: range[1] } : { window: period })
 
   if (error) return <p className="error">{error}</p>
   if (!data) return <p className="muted">{t.app.loading}</p>
@@ -40,11 +42,13 @@ export function ChecksView() {
         <div className="field">
           <span>{t.filters.time}</span>
           <div className="segmented">
-            <button type="button" aria-pressed={period === '4w'} onClick={() => setPeriod('4w')}>{t.filters.last4w}</button>
-            <button type="button" aria-pressed={period === '12m'} onClick={() => setPeriod('12m')}>{t.filters.last12m}</button>
-            <button type="button" aria-pressed={period === ''} onClick={() => setPeriod('')}>{t.filters.allTime}</button>
+            <button type="button" aria-pressed={!range && period === '4w'} onClick={() => { setRange(null); setPeriod('4w') }}>{t.filters.last4w}</button>
+            <button type="button" aria-pressed={!range && period === '12m'} onClick={() => { setRange(null); setPeriod('12m') }}>{t.filters.last12m}</button>
+            <button type="button" aria-pressed={!range && period === ''} onClick={() => { setRange(null); setPeriod('') }}>{t.filters.allTime}</button>
+            <button type="button" aria-pressed={!!range} onClick={() => setRange(range ?? defaultRange(meta))}>{t.filters.custom}</button>
           </div>
         </div>
+        {range && <DateRange value={range} onChange={setRange} />}
         <span className="ignored-note">{dateRange([data.start, data.end])}</span>
       </div>
 

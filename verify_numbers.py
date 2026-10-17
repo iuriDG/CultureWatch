@@ -188,6 +188,13 @@ sa_w, eckp_w = x_week[x_week.organism == "Staphylococcus aureus"], x_week[x_week
 check("weekly summary: ceftriaxone-R without ESBL/CPE (confirm)",
       int(((eckp_w.CRO == "R") & (eckp_w.esbl != 1) & (eckp_w.cpe != 1)).sum()), wk["checks"]["confirm"])
 
+# Custom date range (date filter): each patient's organism counts once within the chosen dates
+for start, end in [("2026-01-01", "2026-03-31"), ("2024-10-01", "2025-09-30")]:
+    w = first_in_window(start, end)
+    k = api("overview", date_from=start, date_to=end)["kpis"]
+    check(f"custom dates {start} to {end}: first isolates", len(w), k["first_isolates"])
+    check(f"custom dates {start} to {end}: MRSA cases/n", rate(w, MRSA_BASE, "mrsa"), (k["mrsa"]["cases"], k["mrsa"]["n"]))
+
 # ---------- Report ----------
 width = max(len(r[0]) for r in rows)
 print(f"Data checked: {RAW.relative_to(ROOT)}\n")

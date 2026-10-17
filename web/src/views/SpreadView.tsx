@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApi } from '../api'
 import { DataTable } from '../components/DataTable'
+import { DateRange, defaultRange, type Range } from '../components/DateRange'
 import { useTooltip } from '../components/Tooltip'
 import { useWidth } from '../components/useWidth'
 import { dateRange, num, pct, PHENOTYPE_LABEL } from '../format'
@@ -13,11 +14,12 @@ type Period = '4w' | '12m' | 'all'
 interface Route { from: string; to: string; patients: number; types: Phenotype[]; byType: Partial<Record<Phenotype, number>> }
 
 export function SpreadView() {
-  const { wardName } = useMeta()
+  const { meta, wardName } = useMeta()
   const { t } = useT()
   const [period, setPeriod] = useState<Period>('12m')
+  const [range, setRange] = useState<Range | null>(null)
   const [phenotype, setPhenotype] = useState<Phenotype | ''>('')
-  const { data, error, loading } = useApi<SpreadResp>('/api/spread', { window: period, phenotype })
+  const { data, error, loading } = useApi<SpreadResp>('/api/spread', range ? { date_from: range[0], date_to: range[1], phenotype } : { window: period, phenotype })
   // Colours follow the ward, not the current filter: rank wards by all-time outflow once, 8 slots, the rest grey.
   const allTime = useApi<SpreadResp>('/api/spread', { window: 'all' })
 
@@ -57,9 +59,11 @@ export function SpreadView() {
         <div className="field">
           <span>{t.spread.period}</span>
           <div className="segmented">
-            {periods.map(p => <button key={p.value} type="button" aria-pressed={period === p.value} onClick={() => setPeriod(p.value)}>{p.label}</button>)}
+            {periods.map(p => <button key={p.value} type="button" aria-pressed={!range && period === p.value} onClick={() => { setRange(null); setPeriod(p.value) }}>{p.label}</button>)}
+            <button type="button" aria-pressed={!!range} onClick={() => setRange(range ?? defaultRange(meta))}>{t.filters.custom}</button>
           </div>
         </div>
+        {range && <DateRange value={range} onChange={setRange} />}
         <div className="field">
           <span>{t.spread.type}</span>
           <div className="segmented">

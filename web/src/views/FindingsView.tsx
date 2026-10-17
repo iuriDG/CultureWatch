@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApi } from '../api'
 import { DataTable } from '../components/DataTable'
+import { DateRange, defaultRange, type Range } from '../components/DateRange'
 import { Status } from '../components/Status'
 import { csvCell, date, dateRange, PHENOTYPE_LABEL, shortOrg } from '../format'
 import { useMeta, useT } from '../state'
@@ -41,10 +42,11 @@ export function FindingsView() {
   const { meta, wardName, specimenName } = useMeta()
   const { t, lang } = useT()
   const [days, setDays] = useState(7)
+  const [range, setRange] = useState<Range | null>(null)
   const [phenotype, setPhenotype] = useState<Phenotype | ''>('')
   const [ward, setWard] = useState('')
   const [notified, toggle] = useNotified()
-  const { data, error, loading } = useApi<FindingsResp>('/api/findings', { days, phenotype, ward })
+  const { data, error, loading } = useApi<FindingsResp>('/api/findings', range ? { date_from: range[0], date_to: range[1], phenotype, ward } : { days, phenotype, ward })
 
   if (error) return <p className="error">{error}</p>
   if (!data) return <p className="muted">{t.app.loading}</p>
@@ -86,10 +88,12 @@ export function FindingsView() {
         <div className="field">
           <span>{t.findings.period}</span>
           <div className="segmented">
-            <button type="button" aria-pressed={days === 7} onClick={() => setDays(7)}>{t.findings.last7}</button>
-            <button type="button" aria-pressed={days === 28} onClick={() => setDays(28)}>{t.findings.last28}</button>
+            <button type="button" aria-pressed={!range && days === 7} onClick={() => { setRange(null); setDays(7) }}>{t.findings.last7}</button>
+            <button type="button" aria-pressed={!range && days === 28} onClick={() => { setRange(null); setDays(28) }}>{t.findings.last28}</button>
+            <button type="button" aria-pressed={!!range} onClick={() => setRange(range ?? defaultRange(meta))}>{t.filters.custom}</button>
           </div>
         </div>
+        {range && <DateRange value={range} onChange={setRange} />}
         <div className="field">
           <span>{t.alerts.type}</span>
           <div className="segmented">

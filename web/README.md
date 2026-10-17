@@ -30,6 +30,7 @@ The tabs are grouped by who uses them. Infection control and Analysis have small
 **Extras in the top bar**
 
 - **Historical replay:** rewind to any week and press Play. The whole app shows what it *would have shown* on that day. The **Replay a past outbreak** button on the start page opens the ICU and plays until its MRSA alert fires (March 2026).
+- **Custom dates:** next to *Last 4 weeks*, *Last 12 months* and so on, choose **Custom dates** and pick any From and To day.
 - **FI / EN:** the whole app works in Finnish and English.
 - **Logo:** back to the start page.
 

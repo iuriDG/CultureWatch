@@ -67,7 +67,10 @@ export function useMeta(): MetaHelpers {
 // ---------- Filters (shared by every view; each view says which ones it ignores) ----------
 /** time: '4w' | '12m' (rolling windows), a surveillance period label like 'Y3 (2025/26)', or 'all' */
 export interface Filters {
+  /** '4w' | '12m' | a surveillance year | 'all' | 'custom' (uses from / to) */
   time: string
+  from: string
+  to: string
   specimen: string
   setting: string
   ward: string
@@ -77,7 +80,7 @@ export interface Filters {
 
 export const ALL = ''
 
-export const DEFAULT_FILTERS: Filters = { time: '12m', specimen: ALL, setting: ALL, ward: ALL, sex: ALL, age_group: ALL }
+export const DEFAULT_FILTERS: Filters = { time: '12m', from: ALL, to: ALL, specimen: ALL, setting: ALL, ward: ALL, sex: ALL, age_group: ALL }
 
 export type FilterKey = keyof Filters
 
@@ -85,7 +88,10 @@ export function filterParams(f: Filters, ignore: FilterKey[] = []): Record<strin
   const p: Record<string, string> = {}
   const use = (k: FilterKey) => !ignore.includes(k) && f[k] !== ALL
   if (use('time') && f.time !== 'all') {
-    if (f.time === '4w' || f.time === '12m') p.window = f.time
+    if (f.time === 'custom') {
+      if (f.from) p.date_from = f.from
+      if (f.to) p.date_to = f.to
+    } else if (f.time === '4w' || f.time === '12m') p.window = f.time
     else p.period = f.time
   }
   for (const k of ['specimen', 'setting', 'ward', 'sex', 'age_group'] as const) {

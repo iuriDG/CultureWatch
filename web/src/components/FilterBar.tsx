@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ALL, useMeta, useT, type FilterKey, type Filters } from '../state'
+import { DateRange, defaultRange } from './DateRange'
 
 const MORE: FilterKey[] = ['setting', 'ward', 'sex', 'age_group']
 
@@ -26,7 +27,13 @@ export function FilterBar({ filters, onChange, ignore = [] }: {
     { value: '12m', label: t.filters.last12m },
     ...meta.periods.map(p => ({ value: p, label: p.split(' ')[0] })),
     { value: 'all', label: t.filters.allTime },
+    { value: 'custom', label: t.filters.custom },
   ]
+  const pickTime = (value: string) => {
+    if (value !== 'custom') return set('time', value)
+    const [from, to] = filters.from && filters.to ? [filters.from, filters.to] : defaultRange(meta)
+    onChange({ ...filters, time: 'custom', from, to })
+  }
 
   return (
     <div className="filter-bar" role="group" aria-label="Filters">
@@ -39,13 +46,16 @@ export function FilterBar({ filters, onChange, ignore = [] }: {
               type="button"
               aria-pressed={filters.time === o.value}
               title={meta.periods.includes(o.value) ? t.filters.year(o.value) : undefined}
-              onClick={() => set('time', o.value)}
+              onClick={() => pickTime(o.value)}
             >
               {o.label}
             </button>
           ))}
         </div>
       </div>}
+      {shown('time') && filters.time === 'custom' && (
+        <DateRange value={[filters.from, filters.to]} onChange={([from, to]) => onChange({ ...filters, from, to })} />
+      )}
       {shown('specimen') && <Select label={t.filters.specimen} all={t.filters.all} cls={cls()} value={filters.specimen} onChange={v => set('specimen', v)}
         options={meta.specimens.map(s => ({ value: s, label: specimenName(s) }))} />}
       <div className="field">

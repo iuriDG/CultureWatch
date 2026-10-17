@@ -114,14 +114,30 @@ def records(df):
     return json.loads(df.to_json(orient="records", date_format="iso"))
 
 
+def custom_range(date_from: date | None, date_to: date | None, s: Snap):
+    """A custom date range, both days included, cut to the data the (time machine) date can see.
+    None when no dates are given."""
+    if date_from is None and date_to is None:
+        return None
+    start = pd.Timestamp(date_from) if date_from else data().ast.sample_date.min()
+    end = min(pd.Timestamp(date_to), s.latest) if date_to else s.latest
+    if start > end:
+        raise HTTPException(422, "The start date must be on or before the end date (and the time machine date).")
+    return start, end
+
+
 def filter_params(period: str | None = None, specimen: str | None = None, setting: Setting | None = None,
                   ward: str | None = None, sex: Literal["F", "M"] | None = None,
                   age_group: str | None = None, window: Window | None = None,
+                  date_from: date | None = None, date_to: date | None = None,
                   s: Snap = Depends(snap)) -> dict:
-    """Shared query parameters. `window` is a rolling period (last 4 weeks / 12 months) ending at the
-    latest sample; it can be combined with `period` but the UI sends one or the other."""
+    """Shared query parameters. `window` is a rolling period (last 4 weeks / 12 months) ending at the latest
+    sample; date_from / date_to is a custom range. The UI sends one of window, period or a custom range.
+    Both windows and custom ranges count each patient's organism once within the range (see select)."""
     f = dict(period=period, specimen=specimen, setting=setting, ward=ward, sex=sex, age_group=age_group)
-    if window:
+    if (rng := custom_range(date_from, date_to, s)) is not None:
+        f["date_from"], f["date_to"] = rng
+    elif window:
         f["date_from"], f["date_to"] = cw.window_dates(s.latest, window)
     return f
 
@@ -175,13 +191,17 @@ def ward_visits():
 
 @app.get("/api/findings")
 def findings(days: int = 7, phenotype: Literal["esbl", "mrsa", "vre", "cpe"] | None = None,
-             ward: str | None = None, s: Snap = Depends(snap)):
+             ward: str | None = None, date_from: date | None = None, date_to: date | None = None,
+             s: Snap = Depends(snap)):
     """Resistant-findings worklist for the infection unit: the last `days` days up to the (time machine) date,
     each finding classed new / known / re-positive carrier. Carrier history uses every isolate, not first isolates."""
-    if not 1 <= days <= 366:
+    if (rng := custom_range(date_from, date_to, s)) is not None:
+        start, end = rng
+    elif not 1 <= days <= 366:
         raise HTTPException(422, "days must be between 1 and 366")
-    end = s.latest
-    start = end - pd.Timedelta(days=days - 1)
+    else:
+        end = s.latest
+        start = end - pd.Timedelta(days=days - 1)
     f = ht.carrier_findings(data().iso_all, start, end, phenotypes=[phenotype] if phenotype else PHENOTYPES)
     if ward:
         f = f[f.ward_code == ward]
@@ -203,17 +223,20 @@ def checks_all():
 
 
 @app.get("/api/checks")
-def checks(window: Window | None = None, ward: str | None = None, s: Snap = Depends(snap)):
+def checks(window: Window | None = None, ward: str | None = None, date_from: date | None = None,
+           date_to: date | None = None, s: Snap = Depends(snap)):
     """Result checks before release: per rule how many isolates were checked and flagged in the period,
     and the flagged isolates. window=None means all data up to the (time machine) date."""
     ev = checks_all()
-    ev = ev[ev.sample_date <= s.latest]
-    start = cw.window_dates(s.latest, window)[0] if window else ev.sample_date.min()
+    rng = custom_range(date_from, date_to, s)
+    end = rng[1] if rng else s.latest
+    ev = ev[ev.sample_date <= end]
+    start = rng[0] if rng else cw.window_dates(s.latest, window)[0] if window else ev.sample_date.min()
     ev = ev[ev.sample_date >= start]
     if ward:
         ev = ev[ev.ward_code == ward]
     flagged = ev[ev.flagged].sort_values(["sample_date", "isolate_id"], ascending=[False, True])
-    return dict(start=pd.Timestamp(start).date().isoformat(), end=s.latest.date().isoformat(),
+    return dict(start=pd.Timestamp(start).date().isoformat(), end=end.date().isoformat(),
                 counts=rc.category_counts(ev), rules=records(rc.summary(ev)),
                 flagged=records(flagged.assign(sample_date=flagged.sample_date.dt.date.astype(str))
                                 .drop(columns=["flagged"])))
@@ -221,10 +244,14 @@ def checks(window: Window | None = None, ward: str | None = None, s: Snap = Depe
 
 @app.get("/api/spread")
 def spread(window: Literal["4w", "12m", "all"] = "12m", phenotype: Literal["esbl", "mrsa", "vre", "cpe"] | None = None,
-           s: Snap = Depends(snap)):
-    """Where new carriers had been in the 30 days before their finding: ward-to-ward movements in the period."""
-    end = s.latest
-    start = cw.window_dates(end, window)[0] if window != "all" else data().iso_all.sample_date.min()
+           date_from: date | None = None, date_to: date | None = None, s: Snap = Depends(snap)):
+    """Where new carriers had been in the 30 days before their finding: ward-to-ward movements in the period
+    (a rolling window, or a custom date range)."""
+    if (rng := custom_range(date_from, date_to, s)) is not None:
+        start, end = rng
+    else:
+        end = s.latest
+        start = cw.window_dates(end, window)[0] if window != "all" else data().iso_all.sample_date.min()
     f = ht.carrier_findings(data().iso_all, start, end, phenotypes=[phenotype] if phenotype else PHENOTYPES)
     f = ht.add_recent_wards(f, ward_visits()[lambda v: v.sample_date <= end])
     new = f[f.status == "new"]

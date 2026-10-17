@@ -311,10 +311,11 @@ The tabs are grouped by who uses them: **My ward** (ward staff), **Infection con
 | Top right | Import | Upload new lab results as CSV files. Every file is checked first (the pipeline's 16 checks and the result checks); nothing changes unless all checks pass, and the original data can always be restored. |
 | | Methods | Every rule and calculation, written out, plus how a resistant finding is handled. |
 | Top bar | **Historical replay** | Rewind to any week and press Play: the whole app shows what it would have shown that day. **Replay a past outbreak** on the start page opens the clearest outbreak in the data (ICU, MRSA, March 2026) and plays until the alert fires. |
+| | Custom dates | Every period choice (Hospital, Antibiogram, Treatment guide, Findings, Result checks, Spread) also has **Custom dates**: pick any From and To day. Each patient's bacterium still counts once within the chosen dates. |
 | | FI / EN | The whole app in Finnish and English, with Finnish number and date formats. |
 | | Logo | Back to the start page. |
 | Everywhere | Tables for real volumes | Every table shows 25 rows per page; sorting and search work across all rows. Filters beyond time and specimen sit behind **More filters**. Works on phones. |
-| | Verified numbers | `verify_numbers.py` recomputes the numbers from the raw files with separate code and compares them with the app (31/31 match), including spread, home areas and the weekly summary. |
+| | Verified numbers | `verify_numbers.py` recomputes the numbers from the raw files with separate code and compares them with the app (35/35 match), including spread, home areas, the weekly summary and custom date ranges. |
 
 The **Share / Jaa** QR code is built in but hidden for now (`SHOW_SHARE` in `web/src/App.tsx`).
 
