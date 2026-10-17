@@ -15,13 +15,13 @@ The tabs are grouped by who uses them. Infection control and Analysis have small
 | Tab | What it tells you |
 |---|---|
 | **Start page** | Before you choose a ward: the **whole hospital right now**. Every ward's last 4 weeks at a glance (unusual clusters, any CPE or VRE case, new carriers), wards with something going on first, then pick your ward. |
-| **My ward** | Opens on your own ward, most important first: **Right now** (anything unusual in the last 4 weeks, any CPE or VRE case, which patients have resistant bacteria, how many samples were sent); **Which antibiotics work here** (a colour grid for the ward's commonest bacteria); **Getting worse?** (worse than last year, or than the rest of the hospital?); then the details. |
+| **My ward** | Opens on your own ward, most important first: **Right now** (anything unusual in the last 4 weeks, any CPE or VRE case, which patients have resistant bacteria, how many samples were sent); **Which antibiotics work here** (a colour grid for the ward's commonest bacteria); **Last 12 months compared with the year before** (worse than last year, or than the rest of the hospital?); then the details. |
 | **Infection control → Right now** | The same whole-hospital view as the start page, for the infection unit's first check of the day. |
 | **Infection control → Findings** | Every new resistant bacterium found: whether the patient is a **new or known carrier**, picked up in hospital or not, and where they were before. Search by patient, ward or organism. |
 | **Infection control → Alerts** | Every ward at once: which wards have more cases than normal right now, and every alert in the past. |
 | **Infection control → Spread** | Where new carriers had been in the 30 days before their finding, as a flow chart: wards on the left, the ward where they were found on the right, wider band = more patients. Each ward has its own colour; point at a ward or band to highlight it. |
 | **Infection control → Weekly summary** | The last 7 days on one printable page: wards on alert and new resistant findings. |
-| **Analysis → Hospital** | The big picture: totals, ward "hotspots", resistance by the patient's home area, hospital vs outpatient resistance. |
+| **Analysis → Hospital** | The big picture: totals, ward "hotspots", resistance by the patient's home area, hospital and outpatient resistance side by side. |
 | **Analysis → Antibiogram** | A colour table: for each bacterium and each antibiotic, how often the antibiotic **fails**, in the six colour bands Europe uses on its resistance maps (green = rarely, dark red = half the time or more). **Bold** = over 20%. Click a cell to see its trend. Print it as a one-page PDF. |
 | **Analysis → Treatment guide** | Pick an infection type (e.g. bladder infection in a woman): which antibiotic would have worked for most past patients. |
 | **Analysis → Trends** | Is resistance rising over time? The chart is first; below it the **guideline expiry date**: when a common antibiotic crosses the 20% line where doctors stop starting it before the test result. |
@@ -63,7 +63,7 @@ The web app **never calculates anything itself**. Every number comes from the sa
 - **Alert (last 4 weeks):** we count a ward's cases of a resistant bacterium in the last 4 weeks and compare them with that ward's normal level over the previous year. If it is clearly more than normal (at least 3 cases, and very unlikely to be chance), it is an alert.
 - **Signal (last 12 months):** a resistance rate that has clearly gone **up since last year**, or is clearly **higher than the rest of the hospital**.
 - **Guideline expiry:** we draw a trend line through resistance over time and see when it crosses **20%**.
-- **New vs known carrier:** *new* = first time this patient has this bacterium; *known* = found before within 12 months; *positive again* = found before, but over 12 months ago.
+- **New or known carrier:** *new* = first time this patient has this bacterium; *known* = found before within 12 months; *positive again* = found before, but over 12 months ago.
 - **CPE and VRE:** so rare that **one case** is already serious, so every case shows on the front pages, even without a cluster.
 - **Samples taken:** next to the alerts, how many samples the ward sent compared with usual. If a ward suddenly tests more, it finds more.
 

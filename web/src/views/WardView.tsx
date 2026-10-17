@@ -247,7 +247,7 @@ export function WardView({ code }: { code: string }) {
         </div>
       </section>
 
-      {/* ---------------- 3. Getting worse? Last 12 months vs the year before ---------------- */}
+      {/* ---------------- 3. Last 12 months compared with the year before ---------------- */}
       <section style={{ display: 'grid', gap: 12 }}>
         <div className="section-title">
           <h2>{t.ward.worseTitle}</h2>

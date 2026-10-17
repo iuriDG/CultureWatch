@@ -301,7 +301,7 @@ We looked at how these people actually work and put their first question at the 
 | Infection-control nurse | Every morning: any new resistant finding or cluster, on any ward? A new carrier can mean contact precautions and tracing the patients exposed on the ward. | Start page / **Infection control → Right now**: every ward's last 4 weeks at a glance, wards with something going on first |
 | Ward staff | Is something happening on my ward, and which of my patients carry what? | **My ward → Right now**: alerts, any CPE or VRE case, the list of resistant findings with carrier status |
 | Doctor | Which antibiotic can I start before the lab result (it takes 2–3 days)? Ward-level numbers matter: ICU resistance differs from the hospital average. | **My ward → Which antibiotics work here**: a simple colour grid for the ward's commonest bacteria, plus first-line antibiotics past the 20% limit |
-| Lab and guideline writers | Is it getting worse, and when does a first-choice antibiotic stop working? | **My ward → Getting worse?**, **Analysis → Trends** with the guideline expiry date |
+| Lab and guideline writers | Is it getting worse, and when does a first-choice antibiotic stop working? | **My ward → Last 12 months compared with the year before**, **Analysis → Trends** with the guideline expiry date |
 
 Three findings shaped the details:
 - **One CPE or VRE case is already serious**: in Finnish regional guidelines a new finding starts tracing of the patients exposed on the ward, and these two are rare and hard to treat. So they show on the front pages even when there is no cluster.
@@ -310,7 +310,7 @@ Three findings shaped the details:
 
 Tracking who has been notified is left to the hospital's own systems, like result acceptance: CultureWatch monitors, it does not run those work processes.
 
-Sources: [Etelä-Pohjanmaa guideline for multidrug-resistant microbes](https://www.hyvaep.fi/uploads/2024/02/moniresistenttien_mikrobien_torjuntaohje.pdf), [cluster alerts in routine infection control (Charité)](https://pmc.ncbi.nlm.nih.gov/articles/PMC8522860/), [what health professionals need from AMR data (UK)](https://pmc.ncbi.nlm.nih.gov/articles/PMC7053143/), [unit-specific vs hospital-wide antibiograms](https://resolve.cambridge.org/core/journals/infection-control-and-hospital-epidemiology/article/comparison-of-unitspecific-and-hospitalwide-antibiograms-potential-implications-for-selection-of-empirical-antimicrobial-therapy/BFBCA00F9CFDD7593248386EB774B4F1), [ECDC Surveillance Atlas (EARS-Net resistance maps)](https://atlas.ecdc.europa.eu/public/index.aspx).
+Sources: [Etelä-Pohjanmaa guideline for multidrug-resistant microbes](https://www.hyvaep.fi/uploads/2024/02/moniresistenttien_mikrobien_torjuntaohje.pdf), [cluster alerts in routine infection control (Charité)](https://pmc.ncbi.nlm.nih.gov/articles/PMC8522860/), [what health professionals need from AMR data (UK)](https://pmc.ncbi.nlm.nih.gov/articles/PMC7053143/), [unit-specific and hospital-wide antibiograms compared](https://resolve.cambridge.org/core/journals/infection-control-and-hospital-epidemiology/article/comparison-of-unitspecific-and-hospitalwide-antibiograms-potential-implications-for-selection-of-empirical-antimicrobial-therapy/BFBCA00F9CFDD7593248386EB774B4F1), [ECDC Surveillance Atlas (EARS-Net resistance maps)](https://atlas.ecdc.europa.eu/public/index.aspx).
 
 ### Web app: every feature in plain words
 
@@ -319,13 +319,13 @@ The tabs are grouped by who uses them: **My ward** (ward staff and doctors), **I
 | Where | Feature | What it does for you |
 |---|---|---|
 | **Start page** | Whole hospital, right now | Before you choose a ward: every ward's last 4 weeks at a glance (cluster alerts, any CPE or VRE case, new carriers), the busiest wards first. Pick a ward to open it. |
-| **My ward** | Own-ward view | Opens on your own ward, most important first: **Right now** (alerts, any CPE or VRE case, the resistant findings on the ward with patient and carrier status, and samples taken vs usual); **Which antibiotics work here** (colour grid of % resistant for the ward's commonest bacteria, click a cell for its trend); **Getting worse?** (12 months vs the year before and vs the rest of the hospital); then the details. |
+| **My ward** | Own-ward view | Opens on your own ward, most important first: **Right now** (alerts, any CPE or VRE case, the resistant findings on the ward with patient and carrier status, and samples taken compared with usual); **Which antibiotics work here** (colour grid of % resistant for the ward's commonest bacteria, click a cell for its trend); **Last 12 months compared with the year before** (and with the rest of the hospital); then the details. |
 | **Infection control** | Right now | The same whole-hospital view as the start page: the infection unit's first check of the day. A ward card opens that ward without changing your own ward. |
 | | Findings | Every new resistant bacterium (MRSA, ESBL, VRE, CPE): whether the patient is a **new or known carrier**, picked up in hospital or not, and where the patient was before. Searchable, export as a line list. |
 | | Alerts | All wards at once: which have more cases than normal right now, plus every past alert. |
 | | Spread | **Where new carriers had been in the 30 days before their finding**, as a flow chart from ward to ward. Each ward has its own colour; hover a ward or band to highlight its flows. A lead for infection control, not proof of transmission. |
 | | Weekly summary | One printable page for the infection unit: wards on alert and new resistant findings from the last 7 days. |
-| **Analysis** | Hospital | The big picture: totals, ward hotspots, resistance **by the patient's home area**, hospital vs outpatient resistance. |
+| **Analysis** | Hospital | The big picture: totals, ward hotspots, resistance **by the patient's home area**, hospital and outpatient resistance side by side. |
 | | Antibiogram | Colour table: how often each antibiotic fails against each bacterium, in the six European resistance bands; **bold** = over 20%. Click a cell to see its trend. Download as CSV or **print / save as PDF** as a one-page cumulative antibiogram. |
 | | Treatment guide | For an infection type, which antibiotic would have worked for most past patients. |
 | | Trends | Is resistance rising? The chart comes first; below it the **guideline expiry date**: when a common antibiotic crosses the 20% line where doctors stop starting it before the lab result. |
@@ -365,7 +365,7 @@ CultureWatch/
 ├── cw_utils.py                       ← shared helpers: filters, rolling windows, resistance %, confidence intervals
 ├── antibiogram.py                    ← step 2: antibiogram tables and heatmaps
 ├── treatment_guide.py                ← step 3: antibiotic coverage per infection scenario
-├── hospital_trends.py                ← step 4: hospital vs community, wards, trends, alerts, carriers, expiry dates
+├── hospital_trends.py                ← step 4: hospital and community, wards, trends, alerts, carriers, expiry dates
 │
 ├── api/                              ← small Python API used by the web app
 │   ├── main.py                       ←   every endpoint; calls the analysis files above
