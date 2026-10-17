@@ -75,7 +75,6 @@ export function AntibiogramView({ filters, setFilters }: { filters: Filters; set
       </div>
       <div className="view-head no-print">
         <h1>{t.abg.title}</h1>
-        <span className="sub">{t.abg.sub}</span>
       </div>
       <div className="no-print"><FilterBar filters={filters} onChange={setFilters} /></div>
       {error && <p className="error">{error}</p>}

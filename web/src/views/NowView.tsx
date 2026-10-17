@@ -1,6 +1,6 @@
 import { useApi } from '../api'
 import { Status } from '../components/Status'
-import { date, dateRange, num, PHENOTYPE_LABEL } from '../format'
+import { date, num, PHENOTYPE_LABEL } from '../format'
 import { useMeta, useT } from '../state'
 import type { NowResp, NowWard, Phenotype } from '../types'
 
@@ -36,7 +36,6 @@ export function NowView({ onPick }: { onPick: (code: string) => void }) {
     <div className={loading ? 'loading' : undefined} style={{ display: 'grid', gap: 20 }}>
       <div className="view-head">
         <h1>{t.now.title}</h1>
-        <span className="sub">{t.now.sub(dateRange(data.window))}</span>
       </div>
 
       <section style={{ display: 'grid', gap: 16 }}>

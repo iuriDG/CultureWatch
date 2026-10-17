@@ -34,7 +34,6 @@ export function TrendsView({ filters, setFilters, initialPair }: {
     <div style={{ display: 'grid', gap: 16 }}>
       <div className="view-head">
         <h1>{t.trends.title}</h1>
-        <span className="sub">{t.trends.sub}</span>
       </div>
       <FilterBar filters={filters} onChange={setFilters} ignore={['time']} />
 

@@ -28,7 +28,6 @@ export function HospitalView({ filters, setFilters, onOpenWard }: {
     <div style={{ display: 'grid', gap: 16 }}>
       <div className="view-head">
         <h1>{t.hosp.title}</h1>
-        <span className="sub">{t.hosp.sub}</span>
       </div>
       <FilterBar filters={filters} onChange={setFilters} />
       {expiry.data && <ExpiryHeadline data={expiry.data} />}

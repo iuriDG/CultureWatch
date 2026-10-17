@@ -43,7 +43,6 @@ export function TreatmentView({ filters, setFilters }: { filters: Filters; setFi
     <div style={{ display: 'grid', gap: 16 }}>
       <div className="view-head">
         <h1>{t.treat.title}</h1>
-        <span className="sub">{t.treat.sub}</span>
       </div>
 
       <div className="filter-bar">

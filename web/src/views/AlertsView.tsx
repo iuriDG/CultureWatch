@@ -31,7 +31,6 @@ export function AlertsView({ myWard, initialPhenotype }: { myWard: string | null
     <div className={loading ? 'loading' : undefined} style={{ display: 'grid', gap: 20 }}>
       <div className="view-head">
         <h1>{t.alerts.title}</h1>
-        <span className="sub">{t.alerts.sub}</span>
       </div>
 
       <div className="filter-bar">

@@ -1,7 +1,7 @@
 import { useApi } from '../api'
 import { DataTable } from '../components/DataTable'
 import { Status } from '../components/Status'
-import { date, dateRange, num, PHENOTYPE_LABEL, shortOrg } from '../format'
+import { date, num, PHENOTYPE_LABEL, shortOrg } from '../format'
 import { useMeta, useT } from '../state'
 import type { WeeklyResp } from '../types'
 
@@ -21,7 +21,6 @@ export function WeeklyView() {
     <div className="printable" style={{ display: 'grid', gap: 16 }}>
       <div className="view-head">
         <h1>{t.weekly.title}</h1>
-        <span className="sub">{t.weekly.sub(dateRange([data.start, data.end]))}</span>
         <span className="header-spacer" />
         <button type="button" className="btn primary no-print" onClick={() => window.print()}>{t.weekly.print}</button>
       </div>

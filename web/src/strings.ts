@@ -34,7 +34,6 @@ const en = {
   },
   weekly: {
     title: 'Weekly summary',
-    sub: (range: string) => `Infection unit · ${range}`,
     print: 'Print / save as PDF',
     newCarriers: 'New resistant findings', none: 'No new resistant findings this week.',
     alerts: 'Wards on alert now', noAlerts: 'No ward has an unusual cluster right now.',
@@ -52,7 +51,6 @@ const en = {
   },
   now: {
     title: 'Right now across the hospital',
-    sub: (range: string) => `Last 4 weeks on every ward · ${range}`,
     chipAlert: (ph: string, n: number, x: string) => `${ph} alert: ${n} cases, usually ${x}`,
     chipRare: (ph: string, d: string) => `${ph} case ${d}`,
     chipNew: (n: number, parts: string) => `${n} new ${n === 1 ? 'carrier' : 'carriers'} (${parts})`,
@@ -176,7 +174,6 @@ const en = {
   },
   alerts: {
     title: 'Cluster alerts',
-    sub: "Each ward's last 4 weeks compared with its own previous 52 weeks · all dates, all wards",
     loadError: 'Could not load alerts:',
     loading: 'Loading alerts…',
     type: 'Resistance type',
@@ -194,7 +191,6 @@ const en = {
   },
   abg: {
     title: 'Antibiogram',
-    sub: '% of first isolates resistant, per organism and antibiotic',
     bandsTitle: 'Resistant (European EARS-Net bands):',
     bands: ['<1%', '1–<5%', '5–<10%', '10–<25%', '25–<50%', '≥50%'],
     over: 'Bold = over 20%: not for starting before the test result',
@@ -206,7 +202,6 @@ const en = {
   },
   treat: {
     title: 'Treatment guide',
-    sub: 'Which antibiotic would have covered this kind of infection?',
     scenario: 'Infection type',
     custom: 'Custom (use the filters below)',
     target: 'Coverage target',
@@ -224,7 +219,6 @@ const en = {
   },
   hosp: {
     title: 'Hospital overview',
-    sub: 'All wards and health centres',
     vre: 'VRE cases', cpe: 'CPE cases',
     mix: 'Organism mix', mixSub: 'first isolates',
     changes: 'Biggest changes from the previous year',
@@ -242,7 +236,6 @@ const en = {
   },
   trends: {
     title: 'Trends',
-    sub: 'Is resistance rising? Quarterly, all surveillance years',
     chartTitle: '% resistant per quarter',
     sig: (dir: string, p: string) => `Significantly ${dir} · ${p}`,
     noSig: (p: string) => `No significant trend · ${p}`,
@@ -432,7 +425,6 @@ const fi: Strings = {
   },
   weekly: {
     title: 'Viikkokooste',
-    sub: (range: string) => `Infektioyksikkö · ${range}`,
     print: 'Tulosta / tallenna PDF',
     newCarriers: 'Uudet resistentit löydökset', none: 'Ei uusia resistenttejä löydöksiä tällä viikolla.',
     alerts: 'Hälytystilassa olevat osastot', noAlerts: 'Millään osastolla ei ole nyt poikkeavaa kasaumaa.',
@@ -450,7 +442,6 @@ const fi: Strings = {
   },
   now: {
     title: 'Koko sairaalan tilanne nyt',
-    sub: (range: string) => `Kaikkien osastojen viimeiset 4 viikkoa · ${range}`,
     chipAlert: (ph: string, n: number, x: string) => `${ph}-hälytys: ${n} tapausta, tavallisesti ${x}`,
     chipRare: (ph: string, d: string) => `${ph}-tapaus ${d}`,
     chipNew: (n: number, parts: string) => `${n} ${n === 1 ? 'uusi kantaja' : 'uutta kantajaa'} (${parts})`,
@@ -573,7 +564,6 @@ const fi: Strings = {
   },
   alerts: {
     title: 'Kasaumahälytykset',
-    sub: 'Kunkin osaston viimeiset 4 viikkoa verrattuna sen omaan edelliseen 52 viikkoon · kaikki ajat, kaikki osastot',
     loadError: 'Hälytyksiä ei voitu ladata:',
     loading: 'Ladataan hälytyksiä…',
     type: 'Resistenssityyppi',
@@ -591,7 +581,6 @@ const fi: Strings = {
   },
   abg: {
     title: 'Antibiogrammi',
-    sub: '% resistenttejä ensimmäisistä isolaateista, mikrobeittain ja antibiooteittain',
     bandsTitle: 'Resistenttejä (eurooppalaiset EARS-Net-luokat):',
     bands: ['<1 %', '1–<5 %', '5–<10 %', '10–<25 %', '25–<50 %', '≥50 %'],
     over: 'Lihavoitu = yli 20 %: ei aloiteta ennen testitulosta',
@@ -603,7 +592,6 @@ const fi: Strings = {
   },
   treat: {
     title: 'Hoito-opas',
-    sub: 'Mikä antibiootti olisi tehonnut tämäntyyppiseen infektioon?',
     scenario: 'Infektiotyyppi',
     custom: 'Mukautettu (käytä alla olevia suodattimia)',
     target: 'Kattavuustavoite',
@@ -621,7 +609,6 @@ const fi: Strings = {
   },
   hosp: {
     title: 'Sairaalan yleiskuva',
-    sub: 'Kaikki osastot ja terveysasemat',
     vre: 'VRE-tapaukset', cpe: 'CPE-tapaukset',
     mix: 'Mikrobijakauma', mixSub: 'ensimmäiset isolaatit',
     changes: 'Suurimmat muutokset edelliseen vuoteen',
@@ -639,7 +626,6 @@ const fi: Strings = {
   },
   trends: {
     title: 'Trendit',
-    sub: 'Onko resistenssi nousussa? Neljännesvuosittain, kaikki seurantavuodet',
     chartTitle: '% resistenttejä neljänneksittäin',
     sig: (dir: string, p: string) => `Merkitsevästi ${dir} · ${p}`,
     noSig: (p: string) => `Ei merkitsevää trendiä · ${p}`,
