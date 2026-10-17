@@ -52,7 +52,6 @@ export function SpreadView() {
     <div className={loading ? 'loading' : undefined} style={{ display: 'grid', gap: 16 }}>
       <div className="view-head">
         <h1>{t.spread.title}</h1>
-        <span className="sub">{t.spread.sub}</span>
       </div>
 
       <div className="filter-bar">

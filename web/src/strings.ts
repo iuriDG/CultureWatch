@@ -23,7 +23,6 @@ const en = {
   navGroup: { ward: 'My ward', control: 'Infection control', analysis: 'Analysis' },
   spread: {
     title: 'Spread between wards',
-    sub: 'Where new carriers had been sampled in the 30 days before their finding',
     period: 'Period', last4w: 'Last 4 weeks', last12m: 'Last 12 months', all: 'All time', type: 'Resistance type', allTypes: 'All',
     newCarriers: 'New carriers', moved: 'Were on another ward first', movedSub: (p: string) => `${p} of new carriers`,
     routes: 'Routes', routesSub: 'distinct ward-to-ward movements',
@@ -423,7 +422,6 @@ const fi: Strings = {
   navGroup: { ward: 'Oma osasto', control: 'Infektioiden torjunta', analysis: 'Analyysit' },
   spread: {
     title: 'Leviäminen osastojen välillä',
-    sub: 'Missä uudet kantajat olivat näytteenotossa 30 päivää ennen löydöstä',
     period: 'Jakso', last4w: 'Viimeiset 4 viikkoa', last12m: 'Viimeiset 12 kk', all: 'Koko aika', type: 'Resistenssityyppi', allTypes: 'Kaikki',
     newCarriers: 'Uudet kantajat', moved: 'Olivat ensin toisella osastolla', movedSub: (p: string) => `${p} uusista kantajista`,
     routes: 'Reitit', routesSub: 'erilaiset siirtymät osastolta toiselle',
