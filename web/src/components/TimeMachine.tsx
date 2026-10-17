@@ -12,12 +12,11 @@ const STEP_MS = 900
  * Playing pauses by itself when an alert fires on your ward (any ward if none is chosen),
  * so a demo can start a few weeks early and let the detector "catch" the cluster live.
  */
-export function TimeMachine({ asOf, setAsOf, myWard, onExit, autoPlay = false }: {
+export function TimeMachine({ asOf, setAsOf, myWard, onExit }: {
   asOf: string
   setAsOf: (d: string) => void
   myWard: string | null
   onExit: () => void
-  autoPlay?: boolean
 }) {
   const { meta, wardName } = useMeta()
   const { t } = useT()
@@ -45,7 +44,6 @@ export function TimeMachine({ asOf, setAsOf, myWard, onExit, autoPlay = false }:
       const i = weeks.indexOf(last.week_end)
       if (i >= 0) setAsOf(weeks[Math.max(0, i - 3)])
     }
-    if (autoPlay) setPlaying(true)
   }, [timeline.data])
 
   // Step only once the current week has finished loading, so every week is actually shown.

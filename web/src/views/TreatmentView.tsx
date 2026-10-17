@@ -137,7 +137,6 @@ export function TreatmentView({ filters, setFilters }: { filters: Filters; setFi
               </div>
             </div>
           )}
-          <p className="small muted">{t.treat.disclaimer}</p>
         </div>
       )}
     </div>

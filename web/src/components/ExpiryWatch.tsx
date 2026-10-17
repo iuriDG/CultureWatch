@@ -51,7 +51,6 @@ export function ExpiryWatch({ data, onShow }: { data: ExpiryResp; onShow: (organ
       <div className="card-head">
         <h3>{t.expiry.title}</h3>
       </div>
-      <p className="secondary" style={{ marginBottom: 12, maxWidth: 820 }}>{t.expiry.sub}</p>
       <DataTable
         rows={rows}
         rowKey={r => r.organism + r.antibiotic_code}

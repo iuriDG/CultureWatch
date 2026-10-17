@@ -51,11 +51,6 @@ const en = {
     area: 'Home area', isolates: 'First isolates',
   },
   print: { button: 'Print / save as PDF', antibiogramTitle: 'Cumulative antibiogram', filters: 'Filters', generated: (d: string) => `Generated ${d} from CultureWatch. First isolate per patient (CLSI M39); % shown only with at least 30 isolates. Synthetic data.` },
-  demo: {
-    title: 'Historical replay',
-    text: 'Rewind the data and watch CultureWatch catch an outbreak week by week, the way it would have happened.',
-    cta: 'Replay a past outbreak',
-  },
   picker: {
     title: 'Open your ward',
     sub: 'Pick your ward and CultureWatch opens on it every time: its last 4 weeks and last 12 months. You can change it in the top bar.',
@@ -65,19 +60,11 @@ const en = {
   now: {
     title: 'Right now across the hospital',
     sub: (range: string) => `Last 4 weeks on every ward · ${range}`,
-    alertLine: (ph: string, ward: string, n: number, x: string) => `Unusual cluster: ${ph} on ${ward}, ${n} cases in 4 weeks (usually about ${x}).`,
-    noAlert: 'No ward has an unusual cluster right now.',
-    rareItem: (ph: string, ward: string, d: string) => `${ph} on ${ward} (${d})`,
-    rareLine: (list: string) => `Found: ${list}. CPE and VRE are rare: even one case needs infection-control action.`,
-    noRare: 'No CPE or VRE in the last 4 weeks.',
-    newLine: (n: number, parts: string) => `${n} new ${n === 1 ? 'carrier' : 'carriers'} of resistant bacteria in the last 4 weeks (${parts}).`,
-    noNew: 'No new carriers of resistant bacteria in the last 4 weeks.',
     wardsTitle: 'Wards', wardsSub: 'Select a ward to open its page.',
     chipAlert: (ph: string, n: number, x: string) => `${ph} alert: ${n} cases, usually ${x}`,
     chipRare: (ph: string, d: string) => `${ph} case ${d}`,
     chipNew: (n: number, parts: string) => `${n} new ${n === 1 ? 'carrier' : 'carriers'} (${parts})`,
     chipCalm: 'Nothing unusual',
-    more: 'More:',
     loading: 'Loading…',
   },
   filters: {
@@ -263,7 +250,6 @@ const en = {
     combos: 'Two-drug combinations',
     combosSub: 'top 10 by coverage',
     regimen: 'Regimen', coverage: 'Coverage', tier: 'Tier',
-    disclaimer: 'Coverage for a patient group, not a prescription. The choice depends on the patient, severity and local guidelines; adjust when the culture result arrives. Stewardship tiers are illustrative.',
   },
   hosp: {
     title: 'Hospital overview',
@@ -323,7 +309,6 @@ const en = {
   },
   expiry: {
     title: 'Guideline expiry watch',
-    sub: 'Doctors usually only start an antibiotic before the lab result if fewer than 20% of the bacteria resist it. This list shows which antibiotics are heading past that limit, and when.',
     headline: (drug: string, org: string, when: string) => `${drug} has crossed the 20% limit for ${org} (around ${when}). Guidelines that start it before test results should be reviewed.`,
     headlineSoon: (drug: string, org: string, m: string, when: string) => `${drug} for ${org} is projected to cross the 20% limit in about ${m} months (${when}).`,
     crossed: (when: string) => `Over the limit since ~${when}`,
@@ -494,11 +479,6 @@ const fi: Strings = {
     area: 'Asuinalue', isolates: 'Ensimmäiset isolaatit',
   },
   print: { button: 'Tulosta / tallenna PDF', antibiogramTitle: 'Kumulatiivinen antibiogrammi', filters: 'Suodattimet', generated: (d: string) => `Luotu ${d} CultureWatchista. Potilaan ensimmäinen isolaatti (CLSI M39); % näytetään vain, kun isolaatteja on vähintään 30. Synteettinen aineisto.` },
-  demo: {
-    title: 'Historiatoisto',
-    text: 'Kelaa aineistoa taaksepäin ja katso, miten CultureWatch havaitsee epidemian viikko viikolta, kuten se olisi tapahtunut.',
-    cta: 'Toista aiempi epidemia',
-  },
   picker: {
     title: 'Avaa oma osastosi',
     sub: 'Valitse osastosi, niin CultureWatch avautuu siihen joka kerta: viimeiset 4 viikkoa ja 12 kuukautta. Voit vaihtaa osaston yläpalkista.',
@@ -508,19 +488,11 @@ const fi: Strings = {
   now: {
     title: 'Koko sairaalan tilanne nyt',
     sub: (range: string) => `Kaikkien osastojen viimeiset 4 viikkoa · ${range}`,
-    alertLine: (ph: string, ward: string, n: number, x: string) => `Poikkeava kasauma: ${ph}, ${ward}: ${n} tapausta 4 viikossa (tavallisesti noin ${x}).`,
-    noAlert: 'Millään osastolla ei ole nyt poikkeavaa kasaumaa.',
-    rareItem: (ph: string, ward: string, d: string) => `${ph}: ${ward} (${d})`,
-    rareLine: (list: string) => `Todettu: ${list}. CPE ja VRE ovat harvinaisia: jo yksi tapaus vaatii torjuntatoimia.`,
-    noRare: 'Ei CPE- eikä VRE-löydöksiä viimeisten 4 viikon aikana.',
-    newLine: (n: number, parts: string) => `${n} ${n === 1 ? 'uusi moniresistentin bakteerin kantaja' : 'uutta moniresistentin bakteerin kantajaa'} viimeisten 4 viikon aikana (${parts}).`,
-    noNew: 'Ei uusia moniresistenttien bakteerien kantajia viimeisten 4 viikon aikana.',
     wardsTitle: 'Osastot', wardsSub: 'Avaa osaston sivu valitsemalla se.',
     chipAlert: (ph: string, n: number, x: string) => `${ph}-hälytys: ${n} tapausta, tavallisesti ${x}`,
     chipRare: (ph: string, d: string) => `${ph}-tapaus ${d}`,
     chipNew: (n: number, parts: string) => `${n} ${n === 1 ? 'uusi kantaja' : 'uutta kantajaa'} (${parts})`,
     chipCalm: 'Ei poikkeavaa',
-    more: 'Lisää:',
     loading: 'Ladataan…',
   },
   filters: {
@@ -704,7 +676,6 @@ const fi: Strings = {
     combos: 'Kahden lääkkeen yhdistelmät',
     combosSub: '10 parasta kattavuuden mukaan',
     regimen: 'Hoito', coverage: 'Kattavuus', tier: 'Taso',
-    disclaimer: 'Kattavuus potilasryhmälle, ei lääkemääräys. Valinta riippuu potilaasta, taudin vaikeudesta ja paikallisista hoitosuosituksista; tarkista hoito, kun viljelyvastaus valmistuu. Hoitotasot ovat havainnollistavia.',
   },
   hosp: {
     title: 'Sairaalan yleiskuva',
@@ -764,7 +735,6 @@ const fi: Strings = {
   },
   expiry: {
     title: 'Hoitosuositusten vanhenemisvahti',
-    sub: 'Antibiootti aloitetaan yleensä ennen laboratoriovastausta vain, jos alle 20 % bakteereista on sille resistenttejä. Lista näyttää, mitkä antibiootit ovat ylittämässä rajan ja milloin.',
     headline: (drug: string, org: string, when: string) => `${drug} on ylittänyt 20 %:n rajan bakteerilla ${org} (noin ${when}). Hoitosuositukset, joissa se aloitetaan ennen vastausta, kannattaa tarkistaa.`,
     headlineSoon: (drug: string, org: string, m: string, when: string) => `${drug} ylittää ennusteen mukaan 20 %:n rajan bakteerilla ${org} noin ${m} kuukauden kuluttua (${when}).`,
     crossed: (when: string) => `Raja ylitetty ~${when}`,

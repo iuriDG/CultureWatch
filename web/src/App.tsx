@@ -9,7 +9,7 @@ import {
   DEFAULT_FILTERS, LangContext, loadLang, loadMyWard, makeMetaHelpers, MetaContext, saveLang, saveMyWard, type Filters,
 } from './state'
 import { STRINGS, type Lang } from './strings'
-import type { Meta, TimelineAlert } from './types'
+import type { Meta } from './types'
 import { AlertsView } from './views/AlertsView'
 import { AntibiogramView } from './views/AntibiogramView'
 import { FindingsView } from './views/FindingsView'
@@ -64,9 +64,6 @@ export function App() {
   const meta = useApi<Meta>('/api/meta')
   const [route, setRoute] = useState<Route>(readRoute)
   const [params, setParams] = useState(() => readHash().params)
-  // Only the replay button on the front pages needs the alert list.
-  const front = route === 'ward' || route === 'now'
-  const timeline = useApi<TimelineAlert[]>(front ? '/api/alert-timeline' : null, {}, { live: true })
   const helpers = useMemo(() => (meta.data ? makeMetaHelpers(meta.data, lang) : null), [meta.data, lang])
   const [myWard, setMyWardState] = useState<string | null>(loadMyWard)
   // Only the analysis views read the shared filters from the address (#/findings?ward=ICU must not filter them)
@@ -74,7 +71,6 @@ export function App() {
     FILTER_ROUTES.includes(readRoute()) ? filtersFromParams(readHash().params, DEFAULT_FILTERS) : DEFAULT_FILTERS)
   const [copied, setCopied] = useState(false)
   const [asOf, setAsOf] = useState<string | null>(null)
-  const [autoPlay, setAutoPlay] = useState(false)
   const [sharing, setSharing] = useState(false)
 
   useEffect(() => {
@@ -131,17 +127,6 @@ export function App() {
   const org = params.get('org'), ab = params.get('ab')
   const trendPair = org && ab && helpers.meta.organisms.includes(org) ? { organism: org, antibiotic: ab } : undefined
   const weeks = helpers.meta.replay_weeks
-  // Demo: replay your ward's latest alert; if it never had one, open the clearest outbreak in the data.
-  const startDemo = () => {
-    const all = timeline.data ?? []
-    if (!all.some(a => a.ward_code === known) && all.length) {
-      const strongest = all.reduce((a, b) => (b.p_value < a.p_value ? b : a))
-      setMyWard(strongest.ward_code)
-    }
-    setAutoPlay(true)
-    setAsOf(weeks[weeks.length - 1])
-    go('ward')
-  }
   const group = GROUPS.find(g => (g.routes as readonly Route[]).includes(route))
 
   return (
@@ -156,7 +141,7 @@ export function App() {
               <span className="header-spacer" />
               <button type="button" className="btn" onClick={copyLink} title={window.location.href}>{copied ? t.app.copied : t.app.copyLink}</button>
               <button type="button" className={`btn${asOf ? '' : ' primary'}`} aria-pressed={asOf !== null}
-                onClick={() => { setAutoPlay(false); setAsOf(asOf ? null : weeks[weeks.length - 1]) }}
+                onClick={() => setAsOf(asOf ? null : weeks[weeks.length - 1])}
                 title={t.app.timeMachineTitle}>
                 {asOf ? t.app.exitTimeMachine : t.app.timeMachine}
               </button>
@@ -194,7 +179,7 @@ export function App() {
                 ))}
               </nav>
             )}
-            {asOf && <TimeMachine asOf={asOf} setAsOf={setAsOf} myWard={known} onExit={() => setAsOf(null)} autoPlay={autoPlay} />}
+            {asOf && <TimeMachine asOf={asOf} setAsOf={setAsOf} myWard={known} onExit={() => setAsOf(null)} />}
           </div>
           <main>
             {/* Front page: my ward, or (no ward chosen yet) the whole hospital with a ward picker */}
@@ -213,15 +198,6 @@ export function App() {
             {route === 'trends' && <TrendsView key={trendPair ? trendPair.organism + trendPair.antibiotic : ''} filters={filters} setFilters={setFilters} initialPair={trendPair} />}
             {route === 'data' && <ImportView />}
             {route === 'methods' && <MethodsView />}
-            {front && !asOf && (
-              <div className="demo-callout">
-                <div>
-                  <strong>{t.demo.title}</strong>
-                  <span className="secondary">{t.demo.text}</span>
-                </div>
-                <button type="button" className="btn primary" onClick={startDemo}>{t.demo.cta}</button>
-              </div>
-            )}
           </main>
           {sharing && <ShareDialog onClose={() => setSharing(false)} />}
         </AsOfContext.Provider>

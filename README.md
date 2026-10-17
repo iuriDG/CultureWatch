@@ -64,7 +64,7 @@ python -m uvicorn api.main:app --port 8000
 
 Open **http://localhost:8000**. That's the whole app, in Finnish and English.
 
-**Try it in 30 seconds:** the start page shows the whole hospital right now. At the bottom, press **Replay a past outbreak**: the app opens the intensive care unit, plays the weeks before March 2026, and stops when the MRSA alert fires. Then look at **Infection control → Right now** and **Analysis → Antibiogram**.
+**Try it in 30 seconds:** the start page shows the whole hospital right now. Choose **Intensive care unit** as your ward, press **Historical replay** in the top bar, then **Play**: the app plays the weeks before March 2026 and stops by itself when the MRSA alert fires. Then look at **Infection control → Right now** and **Analysis → Antibiogram**.
 
 ---
 
@@ -222,7 +222,7 @@ Open **http://localhost:8000**. When the terminal shows `Application startup com
 
 ### Step 9: Check that it works
 
-1. The start page shows the whole hospital right now (with the full data: a CPE case on Internal medicine A and a VRE case on Geriatrics). Choose your ward, or press **Replay a past outbreak** at the bottom: the intensive care unit should turn red in March 2026 with "3 new MRSA cases in 4 weeks, usually about 0.1".
+1. The start page shows the whole hospital right now (with the full data: a CPE case on Internal medicine A and a VRE case on Geriatrics). Choose **Intensive care unit**, press **Historical replay** in the top bar, then **Play**: it should stop on 8 Mar 2026 with "3 new MRSA cases in 4 weeks, usually about 0.1".
 2. In a second terminal (with `conda activate CultureWatch`), check every number against the raw files:
 
    ```bash
@@ -273,7 +273,7 @@ Open **http://localhost:5173**. Development mode is slower than the built app (R
 ### Before a demo
 
 1. Build the latest version: `cd web && npm run build && cd ..`, then start the app (Step 8).
-2. Press **Replay a past outbreak** once. Each replayed week is calculated the first time and remembered after that, so the second run in front of the jury is fast.
+2. Run the **Historical replay** once (Intensive care unit, then **Play** until it stops). Each replayed week is calculated the first time and remembered after that, so the second run in front of the jury is fast.
 3. To show the import live: `python make_demo_batch.py` prepares real data cut at 23 Feb 2026 (see [web/README.md](web/README.md)). Press **Restore original dataset** afterwards.
 
 ### Share it on phones
@@ -318,7 +318,7 @@ The tabs are grouped by who uses them: **My ward** (ward staff and doctors), **I
 
 | Where | Feature | What it does for you |
 |---|---|---|
-| **Start page** | Whole hospital, right now | Before you choose a ward: every ward's last 4 weeks at a glance (cluster alerts, any CPE or VRE case, new carriers) and first-line antibiotics past the 20% limit, then the wards to choose from, the busiest first. |
+| **Start page** | Whole hospital, right now | Before you choose a ward: every ward's last 4 weeks at a glance (cluster alerts, any CPE or VRE case, new carriers), the busiest wards first. Pick a ward to open it. |
 | **My ward** | Own-ward view | Opens on your own ward, most important first: a short summary in everyday words; **Right now** (alerts, any CPE or VRE case, the resistant findings on the ward with patient and carrier status, and samples taken vs usual); **Which antibiotics work here** (colour grid of % resistant for the ward's commonest bacteria, click a cell for its trend); **Getting worse?** (12 months vs the year before and vs the rest of the hospital); then the details. |
 | **Infection control** | Right now | The same whole-hospital view as the start page: the infection unit's first check of the day. A ward card opens that ward without changing your own ward. |
 | | Findings | Every new resistant bacterium (MRSA, ESBL, VRE, CPE): whether the patient is a **new or known carrier**, picked up in hospital or not, and where the patient was before. Searchable, export as a line list. |
@@ -333,7 +333,7 @@ The tabs are grouped by who uses them: **My ward** (ward staff and doctors), **I
 | | Methods | Every rule and calculation, written out, plus how a resistant finding is handled. |
 | Top bar | **Quick search** | Type a ward, bacterium, antibiotic, resistance type or patient ID (press `/` to start). **The answer shows in the list right away**, e.g. *E. coli + trimethoprim: 20.1% resistant in the last 12 months · over the limit since ~Jan 2026*, *ICU: no alert now · MRSA 19.7%*, *P003612: new MRSA carrier, 7 Mar 2026*. Enter opens the full view. Works in Finnish too (*teho*, *trimetopriimi*). |
 | | **Copy link** | Every view has its own address with its filters (e.g. `#/antibiogram?specimen=urine&time=4w`, `#/trends?org=Escherichia+coli&ab=TMP`). Copy link, bookmark or share it, and it reopens exactly the same view. |
-| | **Historical replay** | Rewind to any week and press Play: the whole app shows what it would have shown that day. **Replay a past outbreak** at the bottom of the start page opens the clearest outbreak in the data (ICU, MRSA, March 2026) and plays until the alert fires. |
+| | **Historical replay** | Rewind to any week and press Play: the whole app shows what it would have shown that day. It opens 3 weeks before your ward's latest alert (the hospital's latest with no ward chosen), and **Play** pauses by itself when the alert fires, e.g. the intensive care unit's MRSA cluster in March 2026. |
 | | Custom dates | Every period choice (Hospital, Antibiogram, Treatment guide, Findings, Spread) also has **Custom dates**: pick any From and To day. Each patient's bacterium still counts once within the chosen dates. |
 | | FI / EN | The whole app in Finnish and English, with Finnish number and date formats. |
 | | Logo | Back to the start page. |

@@ -365,14 +365,6 @@ details summary { cursor: pointer; color: var(--text-2); }
   .subnav { padding-left: 16px; padding-right: 16px; }
 }
 
-.demo-callout {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  margin-top: 24px; padding: 14px 18px; border-radius: var(--radius);
-  background: var(--accent-wash); border: 1px solid var(--accent);
-}
-.demo-callout > div { display: grid; gap: 4px; }
-.demo-callout strong { font-size: 15px; }
-
 .weekly-list { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 6px; }
 
 /* Printing (antibiogram, weekly summary): only the page content, on white, every table row. */
@@ -380,7 +372,7 @@ details summary { cursor: pointer; color: var(--text-2); }
 @media print {
   :root { --page: #fff; --surface: #fff; --surface-2: #f3f3f3; --text: #000; --text-2: #333; --border: #bbb; --grid: #ddd; }
   body { background: #fff; color: #000; }
-  .top, .no-print, .demo-callout, .pager, .table-search { display: none !important; }
+  .top, .no-print, .pager, .table-search { display: none !important; }
   .print-only { display: block; }
   main { padding: 0; max-width: none; }
   .card { break-inside: avoid; box-shadow: none; }

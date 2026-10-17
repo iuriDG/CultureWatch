@@ -32,7 +32,7 @@ The tabs are grouped by who uses them. Infection control and Analysis have small
 
 - **Quick search:** type a ward, a bacterium, an antibiotic, MRSA/ESBL/VRE/CPE or a patient ID (or press `/`). The answer appears in the list straight away, for example *"E. coli + trimethoprim: 20.1% resistant, over the 20% limit since ~Jan 2026"*. Press Enter to open the full view.
 - **Copy link:** every view has its own address, filters included. Copy it, bookmark it or send it, and it opens the same view again.
-- **Historical replay:** rewind to any week and press Play. The whole app shows what it *would have shown* on that day. The **Replay a past outbreak** button at the bottom of the start page opens the ICU and plays until its MRSA alert fires (March 2026).
+- **Historical replay:** rewind to any week and press Play. The whole app shows what it *would have shown* on that day. It opens 3 weeks before your ward's latest alert, and **Play** pauses by itself when the alert fires. Try it with the Intensive care unit as your ward: it stops on 8 Mar 2026, at the MRSA cluster.
 - **Custom dates:** next to *Last 4 weeks*, *Last 12 months* and so on, choose **Custom dates** and pick any From and To day.
 - **FI / EN:** the whole app works in Finnish and English.
 - **Logo:** back to the start page.
@@ -94,7 +94,7 @@ python -m uvicorn api.main:app --port 8000 # terminal 1: the API
 cd web && npm install && npm run dev       # terminal 2: the web app
 ```
 
-Open http://localhost:5173. To share it on phones, see *Share it on phones* in the main README. Before a demo, press **Replay a past outbreak** once so the replayed weeks are remembered and play fast.
+Open http://localhost:5173. To share it on phones, see *Share it on phones* in the main README. Before a demo, run the **Historical replay** once (Intensive care unit, then Play) so the replayed weeks are remembered and play fast.
 
 **Try the import (real data only):** `python make_demo_batch.py` cuts the real dataset at a date: `data/demo_batch/base/` holds everything before 23 Feb 2026 and `data/demo_batch/batch/` the real two weeks up to 8 Mar 2026, when the ICU MRSA cluster appears. On the **Import** tab, first *Replace all data* with the four `base` files, then *Add new results* with the three `batch` files: the ICU alert fires, exactly as in the real data. *Restore original dataset* brings back the full data. Import only works on the computer running the app, never through the public link.
 
