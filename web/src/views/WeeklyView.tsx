@@ -65,7 +65,6 @@ export function WeeklyView() {
       </section>
 
 
-      <p className="small muted">{t.weekly.generated(date(data.end))}</p>
     </div>
   )
 }

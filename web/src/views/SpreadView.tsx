@@ -115,7 +115,6 @@ export function SpreadView() {
           </div>
         </>
       )}
-      <p className="small muted">{t.spread.caveat}</p>
     </div>
   )
 }

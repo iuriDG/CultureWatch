@@ -304,10 +304,12 @@ export function WardView({ code }: { code: string }) {
           <DataTable rows={reportable} columns={pairCols} rowKey={r => r.organism + r.antibiotic_code}
             initialSort={{ key: 'n', desc: true }} highlight={pairSignal} empty={t.ward.noPairs(meta.min_isolates)} />
           {small.length > 0 && (
-            <p className="small muted" style={{ marginTop: 8 }}>
-              {t.ward.smallPairs(small.length, meta.min_isolates)}{' '}
-              <button type="button" className="link-btn" onClick={() => setShowSmall(s => !s)}>{showSmall ? t.common.hide : t.common.showCounts}</button>
-            </p>
+            <div className="more-row">
+              <span className="small muted">{t.ward.smallPairs(small.length, meta.min_isolates)}</span>
+              <button type="button" className="mini-btn" aria-expanded={showSmall} onClick={() => setShowSmall(s => !s)}>
+                {showSmall ? t.common.hide : t.common.showCounts}<span aria-hidden="true">{showSmall ? '▴' : '▾'}</span>
+              </button>
+            </div>
           )}
           {showSmall && (
             <DataTable rows={small} rowKey={r => r.organism + r.antibiotic_code} initialSort={{ key: 'n', desc: true }} columns={[

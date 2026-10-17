@@ -64,7 +64,7 @@ export function FilterBar({ filters, onChange, ignore = [] }: {
           {t.filters.more}{active.length ? ` (${active.length})` : ''} {open ? '▴' : '▾'}
         </button>
       </div>
-      {active.length > 0 && <button type="button" className="link-btn small" style={{ alignSelf: 'center' }} onClick={clearMore}>{t.filters.clear}</button>}
+      {active.length > 0 && <button type="button" className="mini-btn" style={{ alignSelf: 'flex-end', height: 32 }} onClick={clearMore}>{t.filters.clear}</button>}
       {open && <div className="filter-more">
       {shown('setting') && <Select label={t.filters.setting} all={t.filters.all} cls={cls()} value={filters.setting} onChange={v => set('setting', v)}
         options={Object.entries(t.filters.settings).map(([value, label]) => ({ value, label }))} />}

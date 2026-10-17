@@ -33,7 +33,6 @@ const en = {
     tableTitle: 'Movements', from: 'Was on', to: 'Found on', patients: 'Patients',
     patientsN: (n: number) => `${n} ${n === 1 ? 'patient' : 'patients'}`, leftThen: 'then found as a new carrier on another ward', arrivedFrom: 'new carriers who had been on another ward first',
     none: 'No new carrier had been on another ward in the 30 days before their finding in this period.',
-    caveat: 'A lead for infection control, not proof of transmission: patients may have carried the bacterium before.',
     loading: 'Loading movements…',
   },
   weekly: {
@@ -43,7 +42,6 @@ const en = {
     newCarriers: 'New resistant findings', none: 'No new resistant findings this week.',
     alerts: 'Wards on alert now', noAlerts: 'No ward has an unusual cluster right now.',
     alertLine: (ph: string, ward: string, obs: number, exp: string) => `${ph} on ${ward}: ${obs} cases in 4 weeks (usually ${exp})`,
-    generated: (d: string) => `Generated from CultureWatch, data through ${d}. Synthetic data.`,
     loading: 'Loading summary…',
   },
   areas: {
@@ -443,7 +441,6 @@ const fi: Strings = {
     tableTitle: 'Siirtymät', from: 'Oli osastolla', to: 'Todettiin osastolla', patients: 'Potilaat',
     patientsN: (n: number) => `${n} ${n === 1 ? 'potilas' : 'potilasta'}`, leftThen: 'todettiin sitten uutena kantajana toisella osastolla', arrivedFrom: 'uusia kantajia, jotka olivat ensin toisella osastolla',
     none: 'Yksikään uusi kantaja ei ollut toisella osastolla 30 päivää ennen löydöstä tällä jaksolla.',
-    caveat: 'Vihje infektioiden torjuntaan, ei todiste tartunnasta: potilas on voinut kantaa bakteeria jo aiemmin.',
     loading: 'Ladataan siirtymiä…',
   },
   weekly: {
@@ -453,7 +450,6 @@ const fi: Strings = {
     newCarriers: 'Uudet resistentit löydökset', none: 'Ei uusia resistenttejä löydöksiä tällä viikolla.',
     alerts: 'Hälytystilassa olevat osastot', noAlerts: 'Millään osastolla ei ole nyt poikkeavaa kasaumaa.',
     alertLine: (ph: string, ward: string, obs: number, exp: string) => `${ph}: ${ward}, ${obs} tapausta 4 viikossa (tavallisesti ${exp})`,
-    generated: (d: string) => `Luotu CultureWatchista, tiedot ${d} asti. Synteettinen aineisto.`,
     loading: 'Ladataan koostetta…',
   },
   areas: {
