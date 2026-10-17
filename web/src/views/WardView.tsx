@@ -60,7 +60,7 @@ function annualSignals(data: WardResp, t: Strings, abLabel: (c: string) => strin
  * carriers and who they are), which antibiotics still work here, is it getting worse, then the details.
  */
 export function WardView({ code }: { code: string }) {
-  const { meta, abLabel, specimenName, wardName } = useMeta()
+  const { meta, abLabel, abName, specimenName, wardName } = useMeta()
   const { t, lang } = useT()
   const [specimen, setSpecimen] = useState('')
   const { data, error, loading } = useApi<WardResp>(`/api/ward/${encodeURIComponent(code)}`, { specimen })
@@ -176,17 +176,19 @@ export function WardView({ code }: { code: string }) {
           </div>
         )}
 
-        <div className="card">
-          <div className="card-head">
-            <div>
-              <h3>{t.ward.findingsTitle}</h3>
-              <p>{t.ward.findingsSub}</p>
+        {findings.length > 0 && (
+          <div className="card">
+            <div className="card-head">
+              <div>
+                <h3>{t.ward.findingsTitle}</h3>
+                <p>{t.ward.findingsSub}</p>
+              </div>
+              <GoLink href={hashFor('findings', { ward: code, days: '28' })}>{t.ward.openFindings}</GoLink>
             </div>
-            <GoLink href={hashFor('findings', { ward: code, days: '28' })}>{t.ward.openFindings}</GoLink>
+            <DataTable rows={findings} columns={findingCols} rowKey={r => r.finding_id} initialSort={{ key: 'd', desc: true }}
+              highlight={r => r.status !== 'known'} pageSize={10} />
           </div>
-          <DataTable rows={findings} columns={findingCols} rowKey={r => r.finding_id} initialSort={{ key: 'd', desc: true }}
-            highlight={r => r.status !== 'known'} empty={t.ward.findingsNone} pageSize={10} />
-        </div>
+        )}
 
         <div className="tiles">
           <div className="tile" title={t.ward.samplesHelp}>
@@ -228,21 +230,19 @@ export function WardView({ code }: { code: string }) {
           <WardGrid pairs={tm.pairs} intrinsic={tm.intrinsic} organismOrder={tm.organism_mix.map(o => o.organism)} />
           <BandLegend><span>{t.abg.urineOnly}</span></BandLegend>
           {expiry.length > 0 && (
-            <p className="small">
-              <strong>{t.ward.acrossHospital}</strong>{' '}
-              {expiry.map((e, i) => (
-                <span key={e.organism + e.antibiotic_code}>
-                  {i > 0 && ' · '}
-                  <a href={hashFor('trends', { org: e.organism, ab: e.antibiotic_code })}>
-                    <span className="italic">{shortOrg(e.organism)}</span> + {abLabel(e.antibiotic_code)}
-                  </a>
-                  {': '}
-                  {e.status === 'crossed'
-                    ? (e.cross_date ? t.expiry.crossed(monthYear(e.cross_date)) : t.expiry.crossedNoDate)
-                    : t.expiry.crossing(num(e.months_left, 0), e.cross_date ? monthYear(e.cross_date) : '—')}
-                </span>
+            <div className="link-row">
+              <span className="small secondary">{t.ward.acrossHospital}</span>
+              {expiry.map(e => (
+                <GoLink key={e.organism + e.antibiotic_code} href={hashFor('trends', { org: e.organism, ab: e.antibiotic_code })}>
+                  <span><span className="italic">{shortOrg(e.organism)}</span> + {abName(e.antibiotic_code)}</span>
+                  <Status kind={e.status === 'crossed' ? 'critical' : 'muted'}>
+                    {e.status === 'crossed'
+                      ? (e.cross_date ? t.expiry.crossed(monthYear(e.cross_date)) : t.expiry.crossedNoDate)
+                      : t.expiry.crossing(num(e.months_left, 0), e.cross_date ? monthYear(e.cross_date) : '—')}
+                  </Status>
+                </GoLink>
               ))}
-            </p>
+            </div>
           )}
           <div className="link-row"><GoLink href={hashFor('treatment')}>{t.ward.treatLink}</GoLink></div>
         </div>
