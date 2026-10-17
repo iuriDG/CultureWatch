@@ -244,6 +244,24 @@ samples = api("ward/ICU", as_of="2026-03-08")["four_weeks"]["samples"]
 check("ICU 4 weeks to 2026-03-08: samples taken (every culture)", int(sent[-4:].sum()), samples["observed"])
 check("ICU 4 weeks to 2026-03-08: usual samples (52-week mean x 4)", round(sent[-56:-4].mean() * 4, 2), round(samples["expected"], 2))
 
+# Quick search, combined questions: a ward with a resistance type, and a ward with a bacterium + antibiotic
+for as_of in [None, "2026-03-08"]:
+    end = pd.Timestamp(as_of) if as_of else latest
+    d = iso[iso.first_year & (iso.sample_date <= end)]
+    weeks = pd.period_range(d.sample_date.min(), d.sample_date.max(), freq="W-SUN")
+    v = d[(d.ward_code == "ICU") & (d.mrsa == 1)].sample_date.dt.to_period("W-SUN").value_counts().reindex(weeks, fill_value=0).values
+    r = next(r for r in api("search", q="icu mrsa", as_of=as_of)["results"] if r["kind"] == "ward_phenotype")
+    w = first_in_window(*window_12m(end))
+    check(f"search 'icu mrsa' to {end:%Y-%m-%d}: 4-week cases, usual, 12-month cases/n",
+          (int(v[-4:].sum()), round(v[-56:-4].mean() * 4, 2), rate(w[w.ward_code == "ICU"], MRSA_BASE, "mrsa")),
+          (r["cases_4w"], round(r["usual_4w"], 2), (r["rate"]["cases"], r["rate"]["n"])))
+w12_icu = first_in_window(*window_12m(latest)).query("ward_code == 'ICU'")
+cip = sus.merge(w12_icu[["isolate_id", "organism"]], on=["isolate_id", "organism"])
+cip = cip[(cip.organism == "Escherichia coli") & (cip.antibiotic_code == "CIP")]
+r = next(r for r in api("search", q="icu coli ciprofloxacin")["results"] if r["kind"] == "ward_pair")
+check("search 'icu coli ciprofloxacin': ICU resistant/tested last 12 m", (int((cip.result == "R").sum()), len(cip)),
+      (round(r["pct"] * r["n"]), r["n"]))
+
 # ---------- Report ----------
 width = max(len(r[0]) for r in rows)
 print(f"Data checked: {RAW.relative_to(ROOT)}\n")

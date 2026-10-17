@@ -15,7 +15,7 @@ export function TrendsView({ filters, setFilters, initialPair }: {
   setFilters: (f: Filters) => void
   initialPair?: { organism: string; antibiotic: string }
 }) {
-  const { meta, abLabel } = useMeta()
+  const { meta, abLabel, wardName } = useMeta()
   const { t } = useT()
   const [pair, setPair] = useState(initialPair ?? { organism: 'Escherichia coli', antibiotic: 'TMP' })
   // Keep the chosen pair in the address, so this trend can be bookmarked or shared.
@@ -54,7 +54,7 @@ export function TrendsView({ filters, setFilters, initialPair }: {
 
       <div className={`card${trend.loading ? ' loading' : ''}`}>
         <div className="card-head">
-          <h3><span className="italic">{pair.organism}</span> · {abLabel(pair.antibiotic)}: {t.trends.chartTitle}</h3>
+          <h3><span className="italic">{pair.organism}</span> · {abLabel(pair.antibiotic)}{filters.ward ? ` · ${wardName(filters.ward)}` : ''}: {t.trends.chartTitle}</h3>
           {trend.data && trend.data.points.length >= 2 && (
             sig ? <Status kind="critical">{t.trends.sig(t.trends.dir[trend.data.direction] ?? trend.data.direction, pText(trend.data.p_value))}</Status>
               : <Status kind="muted">{t.trends.noSig(pText(trend.data.p_value))}</Status>

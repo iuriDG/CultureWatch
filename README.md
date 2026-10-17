@@ -229,7 +229,7 @@ Open **http://localhost:8000**. When the terminal shows `Application startup com
    python verify_numbers.py
    ```
 
-   It should end with `42/42 numbers match the raw data.`
+   It should end with `45/45 numbers match the raw data.`
 
 That's it. 🎉
 
@@ -331,14 +331,14 @@ The tabs are grouped by who uses them: **My ward** (ward staff and doctors), **I
 | | Trends | Is resistance rising? The chart comes first; below it the **guideline expiry date**: when a common antibiotic crosses the 20% line where doctors stop starting it before the lab result. |
 | Top right | Import | Upload new lab results as CSV files. Every file is checked first (the pipeline's 16 data checks); nothing changes unless all checks pass, and the original data can always be restored. |
 | | Methods | Every rule and calculation, written out, plus how a resistant finding is handled. |
-| Top bar | **Quick search** | Type a ward, bacterium, antibiotic, resistance type or patient ID (press `/` to start). **The answer shows in the list right away**, e.g. *E. coli + trimethoprim: 20.1% resistant in the last 12 months · over the limit since Jan 2026*, *ICU: no alert now · MRSA 19.7%*, *P003612: new MRSA carrier, 7 Mar 2026*. Enter opens the full view. Works in Finnish too (*teho*, *trimetopriimi*). |
+| Top bar | **Quick search** | Type a ward, bacterium, antibiotic, resistance type or patient ID (press `/` to start). **The answer shows in the list right away**, e.g. *E. coli + trimethoprim: 20.1% resistant in the last 12 months · over the limit since Jan 2026*, *ICU: no alert now · MRSA 19.7%*, *P003612: new MRSA carrier, 7 Mar 2026*. Combine words to ask a precise question: *ICU MRSA* gives the ICU's MRSA cases in the last 4 weeks against usual and its 12-month rate, *ICU coli ciprofloxacin* the ward's own resistance next to the whole hospital. Enter opens the full view. Works in Finnish too (*teho*, *trimetopriimi*). |
 | | **Shareable addresses** | Every view has its own address with its filters (e.g. `#/antibiogram?specimen=urine&time=4w`, `#/trends?org=Escherichia+coli&ab=TMP`). Copy it from the address bar, bookmark or share it, and it reopens exactly the same view. |
 | | **Historical replay** | Rewind to any week and press Play: the whole app shows what it would have shown that day. It opens 3 weeks before your ward's latest alert (the hospital's latest with no ward chosen), and **Play** pauses by itself when the alert fires, e.g. the intensive care unit's MRSA cluster in March 2026. |
 | | Custom dates | Every period choice (Hospital, Antibiogram, Treatment guide, Findings, Spread) also has **Custom dates**: pick any From and To day. Each patient's bacterium still counts once within the chosen dates. |
 | | FI / EN | The whole app in Finnish and English, with Finnish number and date formats. |
 | | Logo | Back to the start page. |
 | Everywhere | Tables for real volumes | Every table shows 25 rows per page; sorting and search work across all rows. Filters beyond time and specimen sit behind **More filters**. Works on phones. |
-| | Verified numbers | `verify_numbers.py` recomputes the numbers from the raw files with separate code and compares them with the app (42/42 match), including the start page, spread, home areas, the weekly summary, custom date ranges, samples taken and the quick-search answers. |
+| | Verified numbers | `verify_numbers.py` recomputes the numbers from the raw files with separate code and compares them with the app (45/45 match), including the start page, spread, home areas, the weekly summary, custom date ranges, samples taken and the quick-search answers (combined ones too). |
 
 The **Share / Jaa** QR code is built in but hidden for now (`SHOW_SHARE` in `web/src/App.tsx`).
 

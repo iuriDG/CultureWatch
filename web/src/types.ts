@@ -368,6 +368,11 @@ export type SearchResult =
   | { kind: 'antibiotic'; antibiotic_code: string; top: { organism: string; pct: number }[] }
   | { kind: 'ward'; ward_code: string; first_isolates: number; mrsa: Rate; esbl: Rate; alerts: Phenotype[] }
   | { kind: 'phenotype'; phenotype: Phenotype; alert_wards: string[]; cases_4w: number }
+  | { kind: 'ward_phenotype'; ward_code: string; phenotype: Phenotype; cases_4w: number; usual_4w: number; alert: boolean;
+      rate: Rate | null; cases_12m: number }
+  | { kind: 'ward_pair'; ward_code: string; organism: string; antibiotic_code: string; n: number; pct: number | null;
+      intrinsic: boolean; pct_hospital: number | null }
+  | { kind: 'ward_organism'; ward_code: string; organism: string; first_isolates: number; top: { antibiotic_code: string; pct: number }[] }
   | { kind: 'patient'; patient_id: string; samples: number; last_date: string; last_ward: string;
       findings: { phenotype: Phenotype; status: 'new' | 'known' | 'repositive'; sample_date: string; ward_code: string }[] }
 

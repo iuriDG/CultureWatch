@@ -135,7 +135,9 @@ def filter_params(period: str | None = None, specimen: str | None = None, settin
     """Shared query parameters. `window` is a rolling period (last 4 weeks / 12 months) ending at the latest
     sample; date_from / date_to is a custom range. The UI sends one of window, period or a custom range.
     Both windows and custom ranges count each patient's organism once within the range (see select)."""
-    f = dict(period=period, specimen=specimen, setting=setting, ward=ward, sex=sex, age_group=age_group)
+    # an empty value (?specimen=) means 'all', like a missing one
+    f = dict(period=period or None, specimen=specimen or None, setting=setting or None, ward=ward or None,
+             sex=sex or None, age_group=age_group or None)
     if (rng := custom_range(date_from, date_to, s)) is not None:
         f["date_from"], f["date_to"] = rng
     elif window:
@@ -373,6 +375,7 @@ def trend_summary(f: dict = Depends(filter_params), s: Snap = Depends(snap)):
 def alerts(phenotype: Literal["esbl", "mrsa", "vre", "cpe"] = "mrsa", specimen: str | None = None,
            s: Snap = Depends(snap)):
     """Cluster alerts over all wards and dates (only the specimen filter applies), plus weekly counts."""
+    specimen = specimen or None
     iso = s.iso
     counts = ht.weekly_counts(cw.apply_filters(iso, specimen=specimen), phenotype)
     return dict(alerts=records(ht.detect_clusters(counts)),
@@ -598,15 +601,19 @@ def _search_index(as_of: str):
     d = data()
     s = snap(None if as_of == latest().date().isoformat() else date.fromisoformat(as_of))
     w12 = cw.window_dates(s.latest, "12m")
-    pairs = cw.resistance_table(cw.window_view(s.ast_all, *w12)).set_index(["organism", "antibiotic_code"])
+    ast12 = cw.window_view(s.ast_all, *w12)
+    pairs = cw.resistance_table(ast12).set_index(["organism", "antibiotic_code"])
+    # per ward too, for combined questions ("icu coli ciprofloxacin"): same first isolates as the ward page
+    ward_pairs = cw.resistance_table(ast12, by=["ward_code", "organism", "antibiotic_code"])
     iso12 = cw.window_view(s.iso_all, *w12)
     wards = {}
     for code in d.wards.ward_code:
         wi = iso12[iso12.ward_code == code]
         wards[code] = dict(first_isolates=len(wi), mrsa=phenotype_rate(wi, "mrsa"), esbl=phenotype_rate(wi, "esbl"), alerts=[])
-    phenotypes = {}
+    phenotypes, status = {}, {}
     for ph in PHENOTYPES:
         st = ht.current_status(ht.weekly_counts(s.iso, ph))
+        status[ph] = st.set_index("ward_code")
         on = st[st.alert].ward_code.tolist()
         for code in on:
             wards[code]["alerts"].append(ph)
@@ -614,7 +621,8 @@ def _search_index(as_of: str):
     exp, _ = ht.expiry_watch(s.ast, end=s.latest)
     expiry = exp.set_index(["organism", "antibiotic_code"])
     organisms = iso12.organism.value_counts()
-    return dict(s=s, pairs=pairs, wards=wards, phenotypes=phenotypes, expiry=expiry, organisms=organisms)
+    return dict(s=s, pairs=pairs, wards=wards, phenotypes=phenotypes, expiry=expiry, organisms=organisms,
+                ward_pairs=ward_pairs, status=status, iso12=iso12)
 
 
 def _norm(text: str) -> str:
@@ -634,6 +642,40 @@ def _pair_answer(ix, org, ab_code):
             out.update(status=e.status, cross_date=e.cross_date if isinstance(e.cross_date, str) else None,
                        months_left=float(e.months_left) if pd.notna(e.months_left) else None)
     return out
+
+
+def _ward_phenotype_answer(ix, code, ph):
+    """'icu mrsa': this ward's last 4 weeks for one resistance type (same test as the alerts) and its 12 months."""
+    st = ix["status"][ph]
+    row = st.loc[code] if code in st.index else None
+    wi = ix["iso12"][ix["iso12"].ward_code == code]
+    return dict(kind="ward_phenotype", ward_code=code, phenotype=ph,
+                cases_4w=int(row.observed) if row is not None else 0,
+                usual_4w=float(row.expected) if row is not None else 0.0,
+                alert=bool(row.alert) if row is not None else False,
+                rate=phenotype_rate(wi, ph) if ph in PHENOTYPE_BASE else None, cases_12m=int(wi[ph].sum()))
+
+
+def _ward_pair_answer(ix, code, org, ab_code):
+    """'icu coli ciprofloxacin': % resistant on this ward in the last 12 months, next to the whole hospital."""
+    t = ix["ward_pairs"]
+    row = t[(t.ward_code == code) & (t.organism == org) & (t.antibiotic_code == ab_code)]
+    hosp = ix["pairs"].loc[(org, ab_code)] if (org, ab_code) in ix["pairs"].index else None
+    r = row.iloc[0] if len(row) else None
+    return dict(kind="ward_pair", ward_code=code, organism=org, antibiotic_code=ab_code,
+                n=int(r.n_tested) if r is not None else 0, intrinsic=bool(r.intrinsic) if r is not None else False,
+                pct=float(r.pct_resistant) if r is not None and r.reportable else None,
+                pct_hospital=float(hosp.pct_resistant) if hosp is not None and hosp.reportable else None)
+
+
+def _ward_organism_answer(ix, code, org):
+    """'teho coli': how often this bacterium was found on the ward and what it resists most there."""
+    t = ix["ward_pairs"]
+    t = t[(t.ward_code == code) & (t.organism == org) & t.reportable & ~t.intrinsic].sort_values("pct_resistant", ascending=False).head(2)
+    wi = ix["iso12"]
+    return dict(kind="ward_organism", ward_code=code, organism=org,
+                first_isolates=int(((wi.ward_code == code) & (wi.organism == org)).sum()),
+                top=[dict(antibiotic_code=r.antibiotic_code, pct=float(r.pct_resistant)) for r in t.itertuples()])
 
 
 def _top_resistance(ix, organism=None, antibiotic=None, k=2):
@@ -679,6 +721,16 @@ def search(q: str, s: Snap = Depends(snap)):
 
     orgs = best([(score([o]), o) for o in ix["organisms"].index], 2)
     abx = best([(score([a.antibiotic_code, a.antibiotic, a.antibiotic_fi]), a.antibiotic_code) for a in d.abx.itertuples()], 2)
+    ward_hits = best([(score([w.ward_code, w.ward_en, w.ward_fi]), w.ward_code) for w in d.wards.itertuples()], 3)
+    phs = [ph for ph in PHENOTYPES if ph in tokens]
+
+    # Combined questions first: a ward together with a resistance type, or with a bacterium (and antibiotic)
+    for code in ward_hits[:2]:
+        results += [_ward_phenotype_answer(ix, code, ph) for ph in phs]
+        if orgs and abx:
+            results += [_ward_pair_answer(ix, code, o, a) for o in orgs[:1] for a in abx]
+        elif orgs:
+            results.append(_ward_organism_answer(ix, code, orgs[0]))
 
     if orgs and abx:
         results += [_pair_answer(ix, o, a) for o in orgs for a in abx][:3]
@@ -688,12 +740,11 @@ def search(q: str, s: Snap = Depends(snap)):
     elif abx:
         results += [dict(kind="antibiotic", antibiotic_code=a, top=_top_resistance(ix, antibiotic=a)) for a in abx]
 
-    for code in best([(score([w.ward_code, w.ward_en, w.ward_fi]), w.ward_code) for w in d.wards.itertuples()], 3):
+    for code in ward_hits:
         results.append(dict(kind="ward", ward_code=code, **ix["wards"][code]))
 
-    for ph in PHENOTYPES:
-        if ph in tokens:
-            results.append(dict(kind="phenotype", phenotype=ph, **ix["phenotypes"][ph]))
+    for ph in phs:
+        results.append(dict(kind="phenotype", phenotype=ph, **ix["phenotypes"][ph]))
 
     return dict(q=q, as_of=s.latest.date().isoformat(), results=results[:7])
 

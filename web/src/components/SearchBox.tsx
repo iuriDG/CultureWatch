@@ -90,6 +90,24 @@ export function SearchBox() {
         return { key: `h${r.phenotype}`, kind: 'phenotype', title: `${PHENOTYPE_LABEL[r.phenotype]} · ${t.phenotypeHelp[r.phenotype] ?? ''}`,
           answer: r.alert_wards.length ? t.search.phAlert(r.alert_wards.map(wardName).join(', ')) : t.search.phCalm(r.cases_4w),
           href: hashFor('alerts', { type: r.phenotype }) }
+      case 'ward_phenotype': {
+        const now = r.alert ? t.search.wardPhAlert(r.cases_4w, num(r.usual_4w, 1)) : t.search.wardPh4w(r.cases_4w, num(r.usual_4w, 1))
+        const year = r.rate ? (r.rate.pct !== null ? t.search.rate12(pct(r.rate.pct), num(r.rate.cases), num(r.rate.n)) : t.search.pairFew(num(r.rate.n)))
+          : t.search.cases12(r.cases_12m)
+        return { key: `wp${r.ward_code}${r.phenotype}`, kind: 'ward_phenotype', title: `${wardName(r.ward_code)} · ${PHENOTYPE_LABEL[r.phenotype]}`,
+          answer: `${now} · ${year}`, href: hashFor('ward', { code: r.ward_code }) }
+      }
+      case 'ward_pair':
+        return { key: `wq${r.ward_code}${r.organism}${r.antibiotic_code}`, kind: 'ward_pair',
+          title: `${wardName(r.ward_code)} · ${shortOrg(r.organism)} + ${abLabel(r.antibiotic_code)}`,
+          answer: r.intrinsic ? t.search.intrinsic : r.pct !== null
+            ? t.search.wardPairPct(pct(r.pct), num(r.n), r.pct_hospital !== null ? pct(r.pct_hospital) : '')
+            : t.search.wardPairFew(num(r.n)),
+          href: hashFor('trends', { org: r.organism, ab: r.antibiotic_code, ward: r.ward_code }) }
+      case 'ward_organism':
+        return { key: `wo${r.ward_code}${r.organism}`, kind: 'ward_organism', title: `${wardName(r.ward_code)} · ${shortOrg(r.organism)}`,
+          answer: t.search.organism(num(r.first_isolates), r.top.map(x => `${x.antibiotic_code} ${pct(x.pct)}`).join(', ')),
+          href: hashFor('ward', { code: r.ward_code }) }
       case 'patient':
         return { key: `x${r.patient_id}`, kind: 'patient', title: r.patient_id,
           answer: r.findings.length
