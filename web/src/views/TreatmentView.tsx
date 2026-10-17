@@ -59,7 +59,7 @@ export function TreatmentView({ filters, setFilters }: { filters: Filters; setFi
           <input type="range" min={0.5} max={0.99} step={0.01} value={target} onChange={e => setTarget(Number(e.target.value))} style={{ width: 200, height: 32 }} />
         </label>
       </div>
-      {custom ? <FilterBar filters={filters} onChange={setFilters} /> : <p className="ignored-note">{t.treat.presetNote}</p>}
+      {custom && <FilterBar filters={filters} onChange={setFilters} />}
 
       {error && <p className="error">{error}</p>}
       {data && (
