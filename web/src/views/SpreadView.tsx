@@ -94,7 +94,7 @@ export function SpreadView() {
       {routes.length === 0 ? <p className="muted">{t.spread.none}</p> : (
         <>
           <div className="card">
-            <div className="card-head"><h3>{t.spread.mapTitle}</h3><p>{t.spread.mapSub}</p></div>
+            <div className="card-head"><h3>{t.spread.mapTitle}</h3></div>
             <FlowChart routes={routes} wardName={wardName} colorOf={colorOf} />
           </div>
           <div className="card">
