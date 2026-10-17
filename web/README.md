@@ -14,13 +14,15 @@ The tabs are grouped by who uses them. Infection control and Analysis have small
 
 | Tab | What it tells you |
 |---|---|
-| **My ward** | Opens on your own ward. A short summary in plain words, then: anything unusual **in the last 4 weeks**? Is resistance **worse than last year** or worse than the rest of the hospital? |
-| **Infection control → Findings** | The infection unit's to-do list: every new resistant bacterium found, whether the patient is a **new or known carrier**, and checkboxes for who has been told (infection unit, ward, home municipality). Search by patient, ward or organism. |
+| **Start page** | Before you choose a ward: the **whole hospital right now**. Every ward's last 4 weeks at a glance (unusual clusters, any CPE or VRE case, new carriers), wards with something going on first, then pick your ward. |
+| **My ward** | Opens on your own ward, most important first: a short summary in plain words; **Right now** (anything unusual in the last 4 weeks, any CPE or VRE case, which patients have resistant bacteria, how many samples were sent); **Which antibiotics work here** (a colour grid for the ward's commonest bacteria); **Getting worse?** (worse than last year, or than the rest of the hospital?); then the details. |
+| **Infection control → Right now** | The same whole-hospital view as the start page, for the infection unit's first check of the day. |
+| **Infection control → Findings** | Every new resistant bacterium found: whether the patient is a **new or known carrier**, picked up in hospital or not, and where they were before. Search by patient, ward or organism. |
 | **Infection control → Alerts** | Every ward at once: which wards have more cases than normal right now, and every alert in the past. |
 | **Infection control → Spread** | Where new carriers had been in the 30 days before their finding, as a flow chart: wards on the left, the ward where they were found on the right, wider band = more patients. Each ward has its own colour; point at a ward or band to highlight it. |
 | **Infection control → Weekly summary** | The last 7 days on one printable page: wards on alert and new resistant findings. |
 | **Analysis → Hospital** | The big picture: totals, ward "hotspots", resistance by the patient's home area, hospital vs outpatient resistance. |
-| **Analysis → Antibiogram** | A colour table: for each bacterium and each antibiotic, how often the antibiotic **fails** (green = rarely, red = often). Print it as a one-page PDF. |
+| **Analysis → Antibiogram** | A colour table: for each bacterium and each antibiotic, how often the antibiotic **fails**, in the six colour bands Europe uses on its resistance maps (green = rarely, dark red = half the time or more). **Bold** = over 20%. Click a cell to see its trend. Print it as a one-page PDF. |
 | **Analysis → Treatment guide** | Pick an infection type (e.g. bladder infection in a woman): which antibiotic would have worked for most past patients. |
 | **Analysis → Trends** | Is resistance rising over time? The chart is first; below it the **guideline expiry date**: when a common antibiotic crosses the 20% line where doctors stop starting it before the test result. |
 | **Import** (top right) | Upload new lab results as CSV files (e.g. this week's export from the lab system). The files are checked with the same rules as the data pipeline; nothing changes unless every check passes. You can always go back to the original data. |
@@ -30,7 +32,7 @@ The tabs are grouped by who uses them. Infection control and Analysis have small
 
 - **Quick search:** type a ward, a bacterium, an antibiotic, MRSA/ESBL/VRE/CPE or a patient ID (or press `/`). The answer appears in the list straight away, for example *"E. coli + trimethoprim: 20.1% resistant, over the 20% limit since ~Jan 2026"*. Press Enter to open the full view.
 - **Copy link:** every view has its own address, filters included. Copy it, bookmark it or send it, and it opens the same view again.
-- **Historical replay:** rewind to any week and press Play. The whole app shows what it *would have shown* on that day. The **Replay a past outbreak** button on the start page opens the ICU and plays until its MRSA alert fires (March 2026).
+- **Historical replay:** rewind to any week and press Play. The whole app shows what it *would have shown* on that day. The **Replay a past outbreak** button at the bottom of the start page opens the ICU and plays until its MRSA alert fires (March 2026).
 - **Custom dates:** next to *Last 4 weeks*, *Last 12 months* and so on, choose **Custom dates** and pick any From and To day.
 - **FI / EN:** the whole app works in Finnish and English.
 - **Logo:** back to the start page.
@@ -62,6 +64,8 @@ The web app **never calculates anything itself**. Every number comes from the sa
 - **Signal (last 12 months):** a resistance rate that has clearly gone **up since last year**, or is clearly **higher than the rest of the hospital**.
 - **Guideline expiry:** we draw a trend line through resistance over time and see when it crosses **20%**.
 - **New vs known carrier:** *new* = first time this patient has this bacterium; *known* = found before within 12 months; *positive again* = found before, but over 12 months ago.
+- **CPE and VRE:** so rare that **one case** is already serious, so every case shows on the front pages, even without a cluster.
+- **Samples taken:** next to the alerts, how many samples the ward sent compared with usual. If a ward suddenly tests more, it finds more.
 
 "Clearly" means a standard statistics test says it's unlikely to be random. The Methods tab names each test.
 
@@ -94,7 +98,7 @@ Open http://localhost:5173. To share it on phones, see *Share it on phones* in t
 
 **Try the import (real data only):** `python make_demo_batch.py` cuts the real dataset at a date: `data/demo_batch/base/` holds everything before 23 Feb 2026 and `data/demo_batch/batch/` the real two weeks up to 8 Mar 2026, when the ICU MRSA cluster appears. On the **Import** tab, first *Replace all data* with the four `base` files, then *Add new results* with the three `batch` files: the ICU alert fires, exactly as in the real data. *Restore original dataset* brings back the full data. Import only works on the computer running the app, never through the public link.
 
-**Check the numbers:** with the API running, `python verify_numbers.py` recomputes the headline numbers straight from the raw CSV files with its own, separate code and compares them with what the app shows (prints OK/FAIL per number; 31/31 today, including spread, home areas and the weekly summary).
+**Check the numbers:** with the API running, `python verify_numbers.py` recomputes the headline numbers straight from the raw CSV files with its own, separate code and compares them with what the app shows (prints OK/FAIL per number; 42/42 today, including the start page, spread, home areas and the weekly summary).
 
 ---
 
@@ -109,9 +113,9 @@ The web app needs no API keys or passwords. Through the public share link people
 ```
 web/
 ├── src/App.tsx          top bar, grouped tabs, language, historical replay
-├── src/views/           one file per tab (WardView, FindingsView, SpreadView, WeeklyView, ...)
+├── src/views/           one file per tab (NowView, WardView, FindingsView, SpreadView, WeeklyView, ...)
 ├── src/hashParams.ts    the address of each view (route + filters), for links and bookmarks
-├── src/components/      reusable parts: charts, paged tables, filters, replay bar, QR dialog
+├── src/components/      reusable parts: charts, colour grid, paged tables, filters, replay bar, QR dialog
 ├── src/strings.ts       every piece of text, in English and Finnish
 ├── src/format.ts        how numbers and dates are written in each language
 └── src/api.ts           how the app asks the API for data

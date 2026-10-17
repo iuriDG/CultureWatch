@@ -39,6 +39,7 @@ async def security_headers(request, call_next):
     return response
 
 PHENOTYPES = ["esbl", "mrsa", "vre", "cpe"]
+RARE = ["cpe", "vre"]  # so rare that a single case needs infection-control action, cluster or not
 PHENOTYPE_BASE = {  # organisms a phenotype % is calculated over (VRE/CPE are reported as case counts)
     "esbl": ["Escherichia coli", "Klebsiella pneumoniae"],
     "mrsa": ["Staphylococcus aureus"],
@@ -412,6 +413,12 @@ def _ward_view(code: str, specimen: str | None, as_of: str):
     isolates_4w = dict(observed=int(st.observed), expected=float(st.expected),
                        weekly=[int(x) for x in all_counts.loc[code].values[-26:]])
     weeks = [str(w) for w in all_counts.columns[-26:]]
+    # Samples sent (every culture, negative ones too) on the same weeks and test: more testing finds more cases
+    vis = ward_visits()
+    vis = vis[(vis.ward_code == code) & (vis.sample_date <= end) & ((vis.specimen == specimen) if specimen else True)]
+    sent = vis.sample_date.dt.to_period("W-SUN").value_counts().reindex(all_counts.columns, fill_value=0)
+    observed, expected, _ = ht.window_test(sent.values, len(sent))
+    samples_4w = dict(observed=observed, expected=expected, weekly=[int(x) for x in sent.values[-26:]])
 
     # --- Rolling 12 months: phenotype rates and ward antibiogram, vs previous 12 months and vs all sites
     def rates(df):
@@ -457,14 +464,45 @@ def _ward_view(code: str, specimen: str | None, as_of: str):
         latest=end.date().isoformat(),
         windows={"4w": [d.date().isoformat() for d in w4], "12m": [d.date().isoformat() for d in w12],
                  "12m_prev": [d.date().isoformat() for d in prev12]},
-        four_weeks=dict(weeks=weeks, isolates=isolates_4w, phenotypes=four_weeks),
+        four_weeks=dict(weeks=weeks, isolates=isolates_4w, samples=samples_4w, phenotypes=four_weeks),
         twelve_months=dict(first_isolates=len(ward_12),
                            hospital_onset_share=float(ward_12.hospital_onset.mean()) if len(ward_12) else None,
                            rates=rates_12,
                            organism_mix=records(ward_12.organism.value_counts().rename_axis("organism")
                                                 .reset_index(name="n")),
-                           pairs=records(pairs)),
+                           pairs=records(pairs),
+                           intrinsic=[list(ix) for ix in cur[cur.intrinsic].index]),
     )
+
+
+@app.get("/api/now")
+def now(s: Snap = Depends(snap)):
+    """Front page for the whole hospital: every ward's last 4 weeks at a glance (cluster alerts, new carriers,
+    any CPE or VRE finding) and the first-line antibiotics past the 20% limit."""
+    return _now(s.latest.date().isoformat())
+
+
+@lru_cache(maxsize=64)
+def _now(as_of: str):
+    s = snap(date.fromisoformat(as_of)) if as_of != latest().date().isoformat() else snap()
+    end = s.latest
+    start = cw.window_dates(end, "4w")[0]
+    status = {ph: ht.current_status(ht.weekly_counts(s.iso, ph)).set_index("ward_code") for ph in PHENOTYPES}
+    f = ht.carrier_findings(data().iso_all, start, end, phenotypes=PHENOTYPES)
+    wards = []
+    for code in data().wards.ward_code:
+        alerts = [dict(phenotype=ph, observed=int(st.observed), expected=float(st.expected), p_value=float(st.p_value))
+                  for ph in PHENOTYPES if code in status[ph].index
+                  for st in [status[ph].loc[code]] if st.alert]
+        fw = f[f.ward_code == code]
+        wards.append(dict(ward_code=code, alerts=alerts, findings=len(fw),
+                          new_carriers={ph: int(((fw.phenotype == ph) & (fw.status == "new")).sum()) for ph in PHENOTYPES},
+                          rare=[dict(phenotype=r.phenotype, status=r.status, sample_date=r.sample_date.date().isoformat())
+                                for r in fw[fw.phenotype.isin(RARE)].itertuples()]))
+    exp, _ = ht.expiry_watch(s.ast, end=end)
+    exp = exp[exp.status.isin(["crossed", "crossing"])].sort_values(["status", "months_left"])
+    return dict(latest=end.date().isoformat(), window=[start.date().isoformat(), end.date().isoformat()],
+                wards=wards, expiry=records(exp[["organism", "antibiotic_code", "status", "cross_date", "months_left"]]))
 
 
 # ---------- CSV import (lab exports) ----------
@@ -486,7 +524,7 @@ def local_only(request: Request):
 
 
 def reload_data():
-    for cached in (data, _snapshot, ward_visits, _ward_view, alert_timeline, _search_index):
+    for cached in (data, _snapshot, ward_visits, _ward_view, alert_timeline, _search_index, _now):
         cached.cache_clear()
 
 

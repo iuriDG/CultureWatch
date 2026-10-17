@@ -88,3 +88,12 @@ export function csvCell(v: unknown): string {
 }
 
 export const PHENOTYPE_LABEL: Record<string, string> = { esbl: 'ESBL', mrsa: 'MRSA', vre: 'VRE', cpe: 'CPE' }
+
+/** The six % resistant bands of the European surveillance maps (ECDC EARS-Net and WHO CAESAR):
+ *  0 = <1%, 1 = 1–<5%, 2 = 5–<10%, 3 = 10–<25%, 4 = 25–<50%, 5 = ≥50%. */
+export function resistanceBand(p: number): number {
+  return [0.01, 0.05, 0.1, 0.25, 0.5].filter(edge => p >= edge).length
+}
+
+/** Above this share resistant an antibiotic is usually not started before the test result (guideline expiry uses it too). */
+export const EMPIRICAL_LIMIT = 0.2

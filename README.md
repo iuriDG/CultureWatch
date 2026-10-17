@@ -64,7 +64,7 @@ python -m uvicorn api.main:app --port 8000
 
 Open **http://localhost:8000**. That's the whole app, in Finnish and English.
 
-**Try it in 30 seconds:** on the start page press **Replay a past outbreak**. The app opens the intensive care unit, plays the weeks before March 2026, and stops when the MRSA alert fires. Then look at **Infection control → Spread** and **Analysis → Antibiogram**.
+**Try it in 30 seconds:** the start page shows the whole hospital right now. At the bottom, press **Replay a past outbreak**: the app opens the intensive care unit, plays the weeks before March 2026, and stops when the MRSA alert fires. Then look at **Infection control → Right now** and **Analysis → Antibiogram**.
 
 ---
 
@@ -222,14 +222,14 @@ Open **http://localhost:8000**. When the terminal shows `Application startup com
 
 ### Step 9: Check that it works
 
-1. Choose your ward on the start page, or press **Replay a past outbreak**: the intensive care unit should turn red in March 2026 with "3 new MRSA cases in 4 weeks, usually about 0.1".
+1. The start page shows the whole hospital right now (with the full data: a CPE case on Internal medicine A and a VRE case on Geriatrics). Choose your ward, or press **Replay a past outbreak** at the bottom: the intensive care unit should turn red in March 2026 with "3 new MRSA cases in 4 weeks, usually about 0.1".
 2. In a second terminal (with `conda activate CultureWatch`), check every number against the raw files:
 
    ```bash
    python verify_numbers.py
    ```
 
-   It should end with `31/31 numbers match the raw data.`
+   It should end with `42/42 numbers match the raw data.`
 
 That's it. 🎉
 
@@ -290,33 +290,55 @@ Open the printed link on any device. It works only while the app and the tunnel 
 
 ## What you get
 
-**A web app** (`web/`, Finnish and English) built around the people who use it: ward staff, the infection unit and lab scientists. Every feature is listed below.
+**A web app** (`web/`, Finnish and English) built around the people who use it: ward staff, the infection unit, the doctors who choose antibiotics and the lab. Every feature is listed below.
+
+### What matters most comes first
+
+We looked at how these people actually work and put their first question at the top of the page:
+
+| Who | Their first question | Where CultureWatch answers it |
+|---|---|---|
+| Infection-control nurse | Every morning: any new resistant finding or cluster, on any ward? A new carrier can mean contact precautions and tracing the patients exposed on the ward. | Start page / **Infection control → Right now**: every ward's last 4 weeks at a glance, wards with something going on first |
+| Ward staff | Is something happening on my ward, and which of my patients carry what? | **My ward → Right now**: alerts, any CPE or VRE case, the list of resistant findings with carrier status |
+| Doctor | Which antibiotic can I start before the lab result (it takes 2–3 days)? Ward-level numbers matter: ICU resistance differs from the hospital average. | **My ward → Which antibiotics work here**: a simple colour grid for the ward's commonest bacteria, plus first-line antibiotics past the 20% limit |
+| Lab and guideline writers | Is it getting worse, and when does a first-choice antibiotic stop working? | **My ward → Getting worse?**, **Analysis → Trends** with the guideline expiry date |
+
+Three findings shaped the details:
+- **One CPE or VRE case is already serious**: in Finnish regional guidelines a new finding starts tracing of the patients exposed on the ward, and these two are rare and hard to treat. So they show on the front pages even when there is no cluster.
+- **Too many alerts get ignored**: in a German hospital only 35% of automatic cluster alerts were worth acting on. Our alert needs at least 3 cases and p < 0.01, always shows the number of cases against the ward's usual level, and shows **how many samples the ward sent**, so a rise caused only by more testing is easy to spot.
+- **Front-line staff want simple, local, colour-coded numbers**, not spreadsheets or box plots. The colours follow the **six bands of the European resistance maps** (ECDC EARS-Net, WHO CAESAR).
+
+Tracking who has been notified is left to the hospital's own systems, like result acceptance: CultureWatch monitors, it does not run those work processes.
+
+Sources: [Etelä-Pohjanmaa guideline for multidrug-resistant microbes](https://www.hyvaep.fi/uploads/2024/02/moniresistenttien_mikrobien_torjuntaohje.pdf), [cluster alerts in routine infection control (Charité)](https://pmc.ncbi.nlm.nih.gov/articles/PMC8522860/), [what health professionals need from AMR data (UK)](https://pmc.ncbi.nlm.nih.gov/articles/PMC7053143/), [unit-specific vs hospital-wide antibiograms](https://resolve.cambridge.org/core/journals/infection-control-and-hospital-epidemiology/article/comparison-of-unitspecific-and-hospitalwide-antibiograms-potential-implications-for-selection-of-empirical-antimicrobial-therapy/BFBCA00F9CFDD7593248386EB774B4F1), [ECDC Surveillance Atlas (EARS-Net resistance maps)](https://atlas.ecdc.europa.eu/public/index.aspx).
 
 ### Web app: every feature in plain words
 
-The tabs are grouped by who uses them: **My ward** (ward staff), **Infection control** (the infection unit), **Lab** (lab scientists) and **Analysis** (everyone writing guidelines). **Import** and **Methods** sit on the right of the tab bar.
+The tabs are grouped by who uses them: **My ward** (ward staff and doctors), **Infection control** (the infection unit) and **Analysis** (doctors, the lab and everyone writing guidelines). **Import** and **Methods** sit on the right of the tab bar.
 
 | Where | Feature | What it does for you |
 |---|---|---|
-| **My ward** | Own-ward view | Opens on your own ward. A short summary in everyday words, then: anything unusual **in the last 4 weeks** (alerts), and is resistance **worse than last year or than the rest of the hospital** (signals). |
-| **Infection control** | Findings | The infection unit's daily to-do list: every new resistant bacterium (MRSA, ESBL, VRE, CPE), whether the patient is a **new or known carrier**, where the patient was before, and tick-boxes for who has been told. Searchable, export as a line list. |
+| **Start page** | Whole hospital, right now | Before you choose a ward: every ward's last 4 weeks at a glance (cluster alerts, any CPE or VRE case, new carriers) and first-line antibiotics past the 20% limit, then the wards to choose from, the busiest first. |
+| **My ward** | Own-ward view | Opens on your own ward, most important first: a short summary in everyday words; **Right now** (alerts, any CPE or VRE case, the resistant findings on the ward with patient and carrier status, and samples taken vs usual); **Which antibiotics work here** (colour grid of % resistant for the ward's commonest bacteria, click a cell for its trend); **Getting worse?** (12 months vs the year before and vs the rest of the hospital); then the details. |
+| **Infection control** | Right now | The same whole-hospital view as the start page: the infection unit's first check of the day. A ward card opens that ward without changing your own ward. |
+| | Findings | Every new resistant bacterium (MRSA, ESBL, VRE, CPE): whether the patient is a **new or known carrier**, picked up in hospital or not, and where the patient was before. Searchable, export as a line list. |
 | | Alerts | All wards at once: which have more cases than normal right now, plus every past alert. |
 | | Spread | **Where new carriers had been in the 30 days before their finding**, as a flow chart from ward to ward. Each ward has its own colour; hover a ward or band to highlight its flows. A lead for infection control, not proof of transmission. |
 | | Weekly summary | One printable page for the infection unit: wards on alert and new resistant findings from the last 7 days. |
 | **Analysis** | Hospital | The big picture: totals, ward hotspots, resistance **by the patient's home area**, hospital vs outpatient resistance. |
-| | Antibiogram | Colour table: how often each antibiotic fails against each bacterium. Download as CSV or **print / save as PDF** as a one-page cumulative antibiogram. |
+| | Antibiogram | Colour table: how often each antibiotic fails against each bacterium, in the six European resistance bands; **bold** = over 20%. Click a cell to see its trend. Download as CSV or **print / save as PDF** as a one-page cumulative antibiogram. |
 | | Treatment guide | For an infection type, which antibiotic would have worked for most past patients. |
 | | Trends | Is resistance rising? The chart comes first; below it the **guideline expiry date**: when a common antibiotic crosses the 20% line where doctors stop starting it before the lab result. |
 | Top right | Import | Upload new lab results as CSV files. Every file is checked first (the pipeline's 16 data checks); nothing changes unless all checks pass, and the original data can always be restored. |
 | | Methods | Every rule and calculation, written out, plus how a resistant finding is handled. |
 | Top bar | **Quick search** | Type a ward, bacterium, antibiotic, resistance type or patient ID (press `/` to start). **The answer shows in the list right away**, e.g. *E. coli + trimethoprim: 20.1% resistant in the last 12 months · over the limit since ~Jan 2026*, *ICU: no alert now · MRSA 19.7%*, *P003612: new MRSA carrier, 7 Mar 2026*. Enter opens the full view. Works in Finnish too (*teho*, *trimetopriimi*). |
 | | **Copy link** | Every view has its own address with its filters (e.g. `#/antibiogram?specimen=urine&time=4w`, `#/trends?org=Escherichia+coli&ab=TMP`). Copy link, bookmark or share it, and it reopens exactly the same view. |
-| | **Historical replay** | Rewind to any week and press Play: the whole app shows what it would have shown that day. **Replay a past outbreak** on the start page opens the clearest outbreak in the data (ICU, MRSA, March 2026) and plays until the alert fires. |
+| | **Historical replay** | Rewind to any week and press Play: the whole app shows what it would have shown that day. **Replay a past outbreak** at the bottom of the start page opens the clearest outbreak in the data (ICU, MRSA, March 2026) and plays until the alert fires. |
 | | Custom dates | Every period choice (Hospital, Antibiogram, Treatment guide, Findings, Spread) also has **Custom dates**: pick any From and To day. Each patient's bacterium still counts once within the chosen dates. |
 | | FI / EN | The whole app in Finnish and English, with Finnish number and date formats. |
 | | Logo | Back to the start page. |
 | Everywhere | Tables for real volumes | Every table shows 25 rows per page; sorting and search work across all rows. Filters beyond time and specimen sit behind **More filters**. Works on phones. |
-| | Verified numbers | `verify_numbers.py` recomputes the numbers from the raw files with separate code and compares them with the app (34/34 match), including spread, home areas, the weekly summary, custom date ranges and the quick-search answers. |
+| | Verified numbers | `verify_numbers.py` recomputes the numbers from the raw files with separate code and compares them with the app (42/42 match), including the start page, spread, home areas, the weekly summary, custom date ranges, samples taken and the quick-search answers. |
 
 The **Share / Jaa** QR code is built in but hidden for now (`SHOW_SHARE` in `web/src/App.tsx`).
 
@@ -382,7 +404,9 @@ Each analysis file can also be run on its own, e.g. `python antibiogram.py`.
 | **Hospital-onset** | Sample taken on day 3 or later of the hospital stay. |
 | **Community** | Outpatients: health centres and the emergency department. |
 | **Coverage** | Share of all infections in a scenario that an antibiotic would have treated, accounting for which bacteria cause them. |
-| **Colours** | Green <10% resistant, amber 10–20%, red >20%. |
+| **Colours** | The six bands of the European resistance maps (ECDC EARS-Net, WHO CAESAR): <1%, 1–<5%, 5–<10%, 10–<25%, 25–<50%, ≥50% resistant. **Bold** = over 20%, the usual limit for starting an antibiotic before the test result. |
+| **CPE and VRE** | So rare that one case needs infection-control action, so every case is shown on the front pages. A cluster alert still needs 3 cases. |
+| **Samples taken** | Every culture a ward sent, negative ones too. More testing usually finds more cases, so a rise in cases can be checked against it. |
 | **ESBL / MRSA / VRE / CPE** | Resistance types tracked by infection control: ESBL in E. coli and Klebsiella, MRSA in S. aureus (cefoxitin screen), VRE in Enterococcus, CPE in Enterobacterales. |
 
 Statistical methods (Wilson confidence intervals, Fisher's exact test, Cochran–Armitage trend test, Poisson cluster detection) are described in the app's **Methods** tab.

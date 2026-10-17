@@ -280,6 +280,7 @@ export interface WardPair {
   organism: string
   antibiotic_code: string
   n_tested: number
+  n_resistant: number
   pct_resistant: number | null
   ci_low: number
   ci_high: number
@@ -306,6 +307,8 @@ export interface WardResp {
   four_weeks: {
     weeks: string[]
     isolates: { observed: number; expected: number; weekly: number[] }
+    /** every culture sent from the ward, negative ones too: the denominator behind the case counts */
+    samples: { observed: number; expected: number; weekly: number[] }
     phenotypes: WardPhenotypeStatus[]
   }
   twelve_months: {
@@ -319,7 +322,26 @@ export interface WardResp {
     }
     organism_mix: { organism: string; n: number }[]
     pairs: WardPair[]
+    /** organism–antibiotic pairs that are naturally resistant (not shown as a %) */
+    intrinsic: [string, string][]
   }
+}
+
+/** Front page for the whole hospital: every ward's last 4 weeks at a glance. */
+export interface NowWard {
+  ward_code: string
+  alerts: { phenotype: Phenotype; observed: number; expected: number; p_value: number }[]
+  findings: number
+  new_carriers: Record<Phenotype, number>
+  /** CPE and VRE findings: rare enough that a single case needs action */
+  rare: { phenotype: Phenotype; status: 'new' | 'known' | 'repositive'; sample_date: string }[]
+}
+
+export interface NowResp {
+  latest: string
+  window: [string, string]
+  wards: NowWard[]
+  expiry: { organism: string; antibiotic_code: string; status: 'crossed' | 'crossing'; cross_date: string | null; months_left: number | null }[]
 }
 
 export interface SpreadResp {

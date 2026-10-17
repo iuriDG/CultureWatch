@@ -5,6 +5,7 @@ the counting rules are re-implemented here from their definitions, so a bug in t
 Run with the API running (uvicorn api.main:app --port 8000):   python verify_numbers.py
 Exit code 0 = every number matches, 1 = at least one mismatch."""
 import json
+import math
 import sys
 import urllib.parse
 import urllib.request
@@ -187,6 +188,61 @@ pt = next(r for r in api("search", q="P003612")["results"] if r["kind"] == "pati
 mr = iso[(iso.patient_id == "P003612") & (iso.mrsa == 1)].sample_date
 check("search 'P003612': first MRSA positive (new carrier)", mr.min().date().isoformat(),
       next(f["sample_date"] for f in pt["findings"] if f["phenotype"] == "mrsa" and f["status"] == "new"))
+
+# Front pages ("Right now"): wards on cluster alert, new carriers per ward, every CPE/VRE case, samples taken
+def poisson_tail(k, lam):
+    """P(X >= k) for X ~ Poisson(lam)."""
+    return 1 - sum(math.exp(-lam) * lam ** i / math.factorial(i) for i in range(k))
+
+
+def wards_on_alert(as_of):
+    d = iso[iso.first_year & (iso.sample_date <= as_of)]
+    weeks = pd.period_range(d.sample_date.min(), d.sample_date.max(), freq="W-SUN")
+    on = set()
+    for ph in ["esbl", "mrsa", "vre", "cpe"]:
+        for ward in d.ward_code.unique():
+            v = d[(d.ward_code == ward) & (d[ph] == 1)].sample_date.dt.to_period("W-SUN").value_counts().reindex(weeks, fill_value=0).values
+            observed, expected = int(v[-4:].sum()), v[-56:-4].mean() * 4
+            if observed >= 3 and poisson_tail(observed, max(expected, 0.1)) < 0.01:
+                on.add((ward, ph))
+    return on
+
+
+def findings_in_last_4_weeks(end):
+    """Every resistant finding (patient and day) in the 28 days to `end`, with its carrier status."""
+    out = []
+    for ph in ["esbl", "mrsa", "vre", "cpe"]:
+        pos = iso[(iso[ph] == 1) & (iso.sample_date <= end)].drop_duplicates(["patient_id", "sample_date"])
+        prev = pos.groupby("patient_id").sample_date.shift()
+        status = pd.Series("repositive", index=pos.index).mask((pos.sample_date - prev).dt.days <= 365, "known").mask(prev.isna(), "new")
+        keep = pos.sample_date >= end - pd.Timedelta(days=27)
+        out.append(pos[keep].assign(phenotype=ph, status=status[keep])[["ward_code", "phenotype", "sample_date", "status"]])
+    return pd.concat(out)
+
+
+for as_of in [None, "2026-03-08"]:
+    end = pd.Timestamp(as_of) if as_of else latest
+    now = api("now", as_of=as_of)
+    label = f"right now to {end:%Y-%m-%d}"
+    check(f"{label}: wards on cluster alert", sorted(wards_on_alert(end)),
+          sorted((w["ward_code"], a["phenotype"]) for w in now["wards"] for a in w["alerts"]))
+    fr = findings_in_last_4_weeks(end)
+    new = fr[fr.status == "new"].groupby(["ward_code", "phenotype"]).size()
+    check(f"{label}: new carriers per ward and type", {k: int(v) for k, v in new.items()},
+          {(w["ward_code"], ph): n for w in now["wards"] for ph, n in w["new_carriers"].items() if n})
+    rare = fr[fr.phenotype.isin(["cpe", "vre"])]
+    check(f"{label}: every CPE/VRE case (ward, type, day, status)",
+          sorted((r.ward_code, r.phenotype, r.sample_date.date().isoformat(), r.status) for r in rare.itertuples()),
+          sorted((w["ward_code"], r["phenotype"], r["sample_date"], r["status"]) for w in now["wards"] for r in w["rare"]))
+
+as_of = pd.Timestamp("2026-03-08")
+d = iso[iso.first_year & (iso.sample_date <= as_of)]
+weeks = pd.period_range(d.sample_date.min(), d.sample_date.max(), freq="W-SUN")
+sent = cultures[(cultures.ward_code == "ICU") & (cultures.sample_date <= as_of)].sample_date.dt.to_period("W-SUN")
+sent = sent.value_counts().reindex(weeks, fill_value=0).values
+samples = api("ward/ICU", as_of="2026-03-08")["four_weeks"]["samples"]
+check("ICU 4 weeks to 2026-03-08: samples taken (every culture)", int(sent[-4:].sum()), samples["observed"])
+check("ICU 4 weeks to 2026-03-08: usual samples (52-week mean x 4)", round(sent[-56:-4].mean() * 4, 2), round(samples["expected"], 2))
 
 # ---------- Report ----------
 width = max(len(r[0]) for r in rows)

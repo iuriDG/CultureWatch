@@ -264,8 +264,9 @@ def carrier_findings(iso_all, start, end, phenotypes=("esbl", "mrsa", "vre", "cp
 
 
 def load_ward_visits(path=cw.RAW_DIR / "cultures.csv"):
-    """Where each patient was sampled, from every culture (negative ones too): a proxy for where they stayed."""
-    return pd.read_csv(path, usecols=["patient_id", "sample_date", "ward_code"], parse_dates=["sample_date"])
+    """Every culture (negative ones too): where each patient was sampled, a proxy for where they stayed,
+    and how many samples each ward sent (the denominator behind its case counts)."""
+    return pd.read_csv(path, usecols=["patient_id", "sample_date", "ward_code", "specimen"], parse_dates=["sample_date"])
 
 
 def add_recent_wards(findings, visits, days=30):

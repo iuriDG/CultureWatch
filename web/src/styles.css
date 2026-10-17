@@ -28,6 +28,13 @@
   --good-text: #006300;
   --critical-text: #b02a2a;
   --focus: #004a8e;
+  /* % resistant bands of the European maps (ECDC EARS-Net / WHO CAESAR): <1, 1-<5, 5-<10, 10-<25, 25-<50, >=50 */
+  --band-0: color-mix(in srgb, var(--good) 34%, var(--surface));
+  --band-1: color-mix(in srgb, var(--good) 15%, var(--surface));
+  --band-2: color-mix(in srgb, var(--warning) 20%, var(--surface));
+  --band-3: color-mix(in srgb, var(--warning) 46%, var(--surface));
+  --band-4: color-mix(in srgb, var(--serious) 50%, var(--surface));
+  --band-5: color-mix(in srgb, var(--critical) 55%, var(--surface));
   --radius: 10px;
   --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -56,6 +63,12 @@
     --good-text: #0ca30c;
     --critical-text: #e66767;
     --focus: #5aa3e8;
+    --band-0: color-mix(in srgb, var(--good) 34%, var(--surface));
+    --band-1: color-mix(in srgb, var(--good) 15%, var(--surface));
+    --band-2: color-mix(in srgb, var(--warning) 20%, var(--surface));
+    --band-3: color-mix(in srgb, var(--warning) 42%, var(--surface));
+    --band-4: color-mix(in srgb, var(--serious) 48%, var(--surface));
+    --band-5: color-mix(in srgb, var(--critical) 55%, var(--surface));
   }
 }
 
@@ -82,6 +95,12 @@
   --good-text: #0ca30c;
   --critical-text: #e66767;
   --focus: #5aa3e8;
+  --band-0: color-mix(in srgb, var(--good) 34%, var(--surface));
+  --band-1: color-mix(in srgb, var(--good) 15%, var(--surface));
+  --band-2: color-mix(in srgb, var(--warning) 20%, var(--surface));
+  --band-3: color-mix(in srgb, var(--warning) 42%, var(--surface));
+  --band-4: color-mix(in srgb, var(--serious) 48%, var(--surface));
+  --band-5: color-mix(in srgb, var(--critical) 55%, var(--surface));
 }
 
 * { box-sizing: border-box; }
@@ -198,7 +217,7 @@ select, input[type='number'], input[type='date'] {
 /* ---------- Stat tiles ---------- */
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
 .tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: grid; gap: 6px; align-content: start; min-width: 0; }
-.tile.alert { border-color: var(--critical); box-shadow: inset 3px 0 0 var(--critical); }
+.tile.alert { border-color: var(--critical); }
 .tile-label { font-size: 12px; color: var(--text-2); }
 .tile-value { font-size: 26px; font-weight: 600; line-height: 1.1; }
 .tile-value .unit { font-size: 14px; font-weight: 500; color: var(--text-2); margin-left: 4px; }
@@ -237,9 +256,14 @@ tbody tr:hover td { background: var(--surface-2); }
 .abg td, .abg th { border: 2px solid var(--surface); padding: 6px 4px; text-align: center; min-width: 52px; }
 .abg th.org { text-align: left; font-style: italic; font-weight: 500; color: var(--text); min-width: 170px; }
 .abg td { font-variant-numeric: tabular-nums; font-size: 12px; border-radius: 4px; cursor: default; }
-.abg td.green { background: color-mix(in srgb, var(--good) 22%, var(--surface)); }
-.abg td.amber { background: color-mix(in srgb, var(--warning) 32%, var(--surface)); }
-.abg td.red { background: color-mix(in srgb, var(--critical) 26%, var(--surface)); }
+.abg td.b0 { background: var(--band-0); }
+.abg td.b1 { background: var(--band-1); }
+.abg td.b2 { background: var(--band-2); }
+.abg td.b3 { background: var(--band-3); }
+.abg td.b4 { background: var(--band-4); }
+.abg td.b5 { background: var(--band-5); }
+.abg td.over { font-weight: 700; } /* over 20%: the usual limit for starting an antibiotic before the result */
+.abg td.link { cursor: pointer; }
 .abg td.grey { background: var(--surface-2); color: var(--muted); }
 .abg td.empty { background: transparent; }
 .abg td:not(.empty):hover { outline: 2px solid var(--text); outline-offset: -2px; }
@@ -264,7 +288,7 @@ tbody tr:hover td { background: var(--surface-2); }
 .chip { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-2); margin-left: 6px; vertical-align: 1px; }
 
 /* ---------- Charts ---------- */
-.chart { position: relative; width: 100%; }
+.chart { position: relative; width: 100%; min-width: 0; } /* may shrink inside grid tiles; the SVG follows */
 .chart svg { display: block; overflow: visible; }
 .chart text { fill: var(--muted); font-size: 11px; font-family: var(--font); font-variant-numeric: tabular-nums; }
 .tooltip {
@@ -280,13 +304,17 @@ tbody tr:hover td { background: var(--surface-2); }
 .ward-card { text-align: left; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 14px; cursor: pointer; display: grid; gap: 4px; }
 .ward-card:hover { border-color: var(--accent); }
 .ward-card .code { font-size: 12px; color: var(--text-2); }
+.ward-card.attention { border-color: var(--critical); }
+.ward-status { display: grid; gap: 3px; margin-top: 6px; }
+.ward-status .status { white-space: normal; }
+.link-row { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; align-items: baseline; }
+.link-row a { color: var(--accent); }
 
 /* ---------- Plain-language summary ---------- */
 .summary {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 14px 16px; display: grid; gap: 6px; box-shadow: inset 4px 0 0 var(--good);
+  padding: 14px 16px; display: grid; gap: 6px;
 }
-.summary.attention { box-shadow: inset 4px 0 0 var(--critical); }
 .summary h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-2); }
 .summary p { font-size: 15px; max-width: 900px; }
 
@@ -307,11 +335,7 @@ tbody tr:hover td { background: var(--surface-2); }
 .dropzone:hover, .dropzone.over { border-color: var(--accent); background: var(--accent-wash); }
 .dropzone.off { cursor: not-allowed; opacity: 0.5; }
 
-/* ---------- Findings worklist ---------- */
-.checks { display: flex; gap: 10px; flex-wrap: nowrap; }
-.check { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-2); cursor: pointer; white-space: nowrap; }
-.check input { margin: 0; accent-color: var(--good); }
-.check.done { color: var(--good-text); font-weight: 600; }
+/* ---------- Methods: how a finding is handled ---------- */
 .process { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
 
 .error { color: var(--critical-text); }
@@ -343,7 +367,7 @@ details summary { cursor: pointer; color: var(--text-2); }
 
 .demo-callout {
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  margin-bottom: 20px; padding: 14px 18px; border-radius: var(--radius);
+  margin-top: 24px; padding: 14px 18px; border-radius: var(--radius);
   background: var(--accent-wash); border: 1px solid var(--accent);
 }
 .demo-callout > div { display: grid; gap: 4px; }

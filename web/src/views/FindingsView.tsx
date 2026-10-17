@@ -7,45 +7,21 @@ import { csvCell, date, dateRange, PHENOTYPE_LABEL, shortOrg } from '../format'
 import { useMeta, useT } from '../state'
 import type { Finding, FindingsResp, Phenotype } from '../types'
 
-type Step = 'iu' | 'ward' | 'muni'
-type Notified = Record<string, Partial<Record<Step, string>>>
-
-const NOTIFIED_KEY = 'culturewatch.notified'
-
-function loadNotified(): Notified {
-  try {
-    return JSON.parse(localStorage.getItem(NOTIFIED_KEY) ?? '{}') as Notified
-  } catch {
-    return {}
-  }
-}
-
-/** Notification checkmarks per finding, kept in this browser (a stand-in for writing back to the lab system). */
-function useNotified() {
-  const [state, setState] = useState<Notified>(loadNotified)
-  const toggle = (id: string, step: Step) => {
-    setState(prev => {
-      const cur = { ...(prev[id] ?? {}) }
-      if (cur[step]) delete cur[step]
-      else cur[step] = new Date().toISOString()
-      const next = { ...prev, [id]: cur }
-      try { localStorage.setItem(NOTIFIED_KEY, JSON.stringify(next)) } catch { /* not saved in a private window */ }
-      return next
-    })
-  }
-  return [state, toggle] as const
-}
-
 const PHENOTYPES: Phenotype[] = ['mrsa', 'esbl', 'vre', 'cpe']
 
-export function FindingsView({ initialQuery = '', allTime = false }: { initialQuery?: string; allTime?: boolean }) {
+/**
+ * Line list of resistant findings (monitoring, not a workflow): who is a new carrier, who may have picked it up
+ * in hospital and where they had been. Telling the ward and the municipality happens in the hospital's own systems.
+ */
+export function FindingsView({ initialQuery = '', allTime = false, initialWard = '', initialDays = 7 }: {
+  initialQuery?: string; allTime?: boolean; initialWard?: string; initialDays?: number
+}) {
   const { meta, wardName, specimenName } = useMeta()
-  const { t, lang } = useT()
-  const [days, setDays] = useState(7)
+  const { t } = useT()
+  const [days, setDays] = useState(initialDays)
   const [range, setRange] = useState<Range | null>(allTime ? [meta.date_min, meta.date_max] : null)
   const [phenotype, setPhenotype] = useState<Phenotype | ''>('')
-  const [ward, setWard] = useState('')
-  const [notified, toggle] = useNotified()
+  const [ward, setWard] = useState(initialWard)
   const { data, error, loading } = useApi<FindingsResp>('/api/findings', range ? { date_from: range[0], date_to: range[1], phenotype, ward } : { days, phenotype, ward })
 
   if (error) return <p className="error">{error}</p>
@@ -53,25 +29,12 @@ export function FindingsView({ initialQuery = '', allTime = false }: { initialQu
 
   const f = data.findings
   const isNew = (r: Finding) => r.status === 'new'
-  const pending = f.filter(r => isNew(r) && !notified[r.finding_id]?.iu).length
-  const time = (iso: string) => new Date(iso).toLocaleTimeString(lang === 'fi' ? 'fi-FI' : 'en-GB', { hour: '2-digit', minute: '2-digit' })
-
-  const check = (r: Finding, step: Step, label: string) => {
-    const at = notified[r.finding_id]?.[step]
-    return (
-      <label className={`check${at ? ' done' : ''}`} title={at ? `${label} ✓ ${time(at)}` : label}>
-        <input type="checkbox" checked={!!at} onChange={() => toggle(r.finding_id, step)} />
-        <span>{label}{at ? ` ${time(at)}` : ''}</span>
-      </label>
-    )
-  }
 
   const exportCsv = () => {
     const head = ['date', 'patient_id', 'sex', 'age', 'ward', 'specimen', 'type', 'organisms', 'carrier_status', 'previous_positive',
-      'hospital_onset', 'home_area', 'other_wards_30d', 'infection_unit_notified', 'ward_notified', 'municipality_notified']
+      'hospital_onset', 'home_area', 'other_wards_30d']
     const rows = f.map(r => [r.sample_date, r.patient_id, r.sex, r.age_years, r.ward_code, r.specimen, PHENOTYPE_LABEL[r.phenotype], r.organisms,
-      r.status, r.prev_date ?? '', r.hospital_onset, r.home_area, r.recent_wards.join(' '),
-      notified[r.finding_id]?.iu ?? '', notified[r.finding_id]?.ward ?? '', notified[r.finding_id]?.muni ?? ''].map(csvCell).join(','))
+      r.status, r.prev_date ?? '', r.hospital_onset, r.home_area, r.recent_wards.join(' ')].map(csvCell).join(','))
     const url = URL.createObjectURL(new Blob([[head.join(','), ...rows].join('\n')], { type: 'text/csv' }))
     Object.assign(document.createElement('a'), { href: url, download: `line-list-${data.end}.csv` }).click()
     URL.revokeObjectURL(url)
@@ -113,18 +76,6 @@ export function FindingsView({ initialQuery = '', allTime = false }: { initialQu
         <span className="ignored-note">{dateRange([data.start, data.end])}</span>
       </div>
 
-      {f.some(isNew) && (pending ? (
-        <div className="banner critical" role="status">
-          <Status kind="critical">{t.status.alert}</Status>
-          <span>{t.findings.pending(pending)}</span>
-        </div>
-      ) : (
-        <div className="banner good">
-          <Status kind="good">{t.status.normal}</Status>
-          <span>{t.findings.allReported}</span>
-        </div>
-      ))}
-
       <div className="tiles">
         <div className={`tile${f.some(isNew) ? ' alert' : ''}`}>
           <span className="tile-label">{t.findings.newCarriers}</span>
@@ -158,7 +109,7 @@ export function FindingsView({ initialQuery = '', allTime = false }: { initialQu
           initialQuery={initialQuery}
           rowKey={r => r.finding_id}
           search={r => [r.patient_id, wardName(r.ward_code), r.ward_code, r.organisms, PHENOTYPE_LABEL[r.phenotype], specimenName(r.specimen), t.findings.status[r.status]].join(' ')}
-          highlight={r => isNew(r) && !notified[r.finding_id]?.iu}
+          highlight={isNew}
           empty={t.findings.none}
           columns={[
             { key: 'd', header: t.findings.date, render: r => date(r.sample_date), sort: r => r.sample_date },
@@ -176,13 +127,6 @@ export function FindingsView({ initialQuery = '', allTime = false }: { initialQu
             { key: 'ho', header: t.findings.ho, render: r => (r.hospital_onset ? <strong>{t.findings.yes}</strong> : <span className="muted">–</span>), sort: r => (r.hospital_onset ? 0 : 1) },
             { key: 'mv', header: t.findings.recent, render: r => r.recent_wards.length ? r.recent_wards.map(wardName).join(', ') : <span className="muted">–</span> },
             { key: 'ha', header: t.findings.homeArea, render: r => t.findings.areas[r.home_area] ?? r.home_area },
-            { key: 'n', header: t.findings.notified, render: r => (
-              <div className="checks">
-                {check(r, 'iu', t.findings.iu)}
-                {check(r, 'ward', t.findings.ward)}
-                {isNew(r) && check(r, 'muni', t.findings.muni)}
-              </div>
-            ) },
           ]}
         />
         {!data.history_complete && <p className="small muted" style={{ marginTop: 8 }}>{t.findings.historyNote}</p>}

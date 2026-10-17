@@ -6,7 +6,7 @@ import { useMeta, useT } from '../state'
 import type { Rate, SearchResp, SearchResult } from '../types'
 
 const RECENT_KEY = 'culturewatch.recent'
-const PAGES = ['ward', 'findings', 'alerts', 'spread', 'weekly', 'hospital', 'antibiogram', 'treatment', 'trends', 'data', 'methods'] as const
+const PAGES = ['ward', 'now', 'findings', 'alerts', 'spread', 'weekly', 'hospital', 'antibiogram', 'treatment', 'trends', 'data', 'methods'] as const
 
 interface Item { key: string; kind: string; title: string; answer?: string; href?: string; fill?: string; italic?: boolean }
 

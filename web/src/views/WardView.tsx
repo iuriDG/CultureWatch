@@ -3,13 +3,18 @@ import { useApi } from '../api'
 import { BarList } from '../components/BarList'
 import { DataTable, type Column } from '../components/DataTable'
 import { Status } from '../components/Status'
+import { BandLegend, WardGrid } from '../components/WardGrid'
 import { WeeklyColumns } from '../components/WeeklyColumns'
-import { date, dateRange, num, pct, PHENOTYPE_LABEL, pp, pText, pValue, shortOrg } from '../format'
+import { date, dateRange, monthYear, num, pct, PHENOTYPE_LABEL, pp, pText, pValue, shortOrg } from '../format'
+import { hashFor } from '../hashParams'
 import { useMeta, useT } from '../state'
+import { soon } from './NowView'
 import type { Strings } from '../strings'
-import type { Rate, RateTests, WardPair, WardResp } from '../types'
+import type { Finding, FindingsResp, NowResp, Phenotype, Rate, RateTests, WardPair, WardResp } from '../types'
 
 const SIG = 0.05
+const RARE: Phenotype[] = ['cpe', 'vre'] // one case already needs action
+const ORDER: Phenotype[] = ['mrsa', 'esbl', 'vre', 'cpe']
 
 const rising = (cur: number | null, prev: number | null, p: number | null) =>
   p !== null && p < SIG && cur !== null && prev !== null && cur > prev
@@ -50,13 +55,20 @@ function annualSignals(data: WardResp, t: Strings, abLabel: (c: string) => strin
   return out.sort((a, b) => a.p - b.p)
 }
 
-/** Plain-language summary built only from the numbers on this page (nothing generated, nothing invented). */
-function plainSummary(data: WardResp, t: Strings, signals: Signal[]): string[] {
+/** Plain-language summary built only from the numbers on this page (nothing generated, nothing invented),
+ *  most urgent first: clusters, CPE/VRE cases, new carriers, then the 12-month picture. */
+function plainSummary(data: WardResp, t: Strings, signals: Signal[], findings: Finding[]): string[] {
   const fw = data.four_weeks, tm = data.twelve_months
   const lines: string[] = []
   const alerts = fw.phenotypes.filter(p => p.alert)
   if (alerts.length) alerts.forEach(a => lines.push(t.ward.sumAlert(t.phenotypePlain[a.phenotype], a.observed, num(a.expected, 1))))
   else lines.push(t.ward.sumCalm)
+  for (const r of findings.filter(f => RARE.includes(f.phenotype))) lines.push(t.ward.sumRare(PHENOTYPE_LABEL[r.phenotype], date(r.sample_date)))
+  const fresh = findings.filter(f => f.status === 'new')
+  if (fresh.length) {
+    const by = ORDER.map(ph => [ph, fresh.filter(f => f.phenotype === ph).length] as const).filter(([, n]) => n > 0)
+    lines.push(t.ward.sumNew(fresh.length, by.map(([ph, n]) => `${PHENOTYPE_LABEL[ph]} ${n}`).join(', ')))
+  }
 
   let any = false
   for (const ph of ['esbl', 'mrsa'] as const) {
@@ -72,26 +84,35 @@ function plainSummary(data: WardResp, t: Strings, signals: Signal[]): string[] {
   return lines
 }
 
+/**
+ * Own-ward page, ordered by what staff need first: is anything happening right now (clusters, CPE/VRE, new
+ * carriers and who they are), which antibiotics still work here, is it getting worse, then the details.
+ */
 export function WardView({ code }: { code: string }) {
-  const { meta, abLabel, specimenName } = useMeta()
+  const { meta, abLabel, specimenName, wardName } = useMeta()
   const { t, lang } = useT()
   const [specimen, setSpecimen] = useState('')
   const { data, error, loading } = useApi<WardResp>(`/api/ward/${encodeURIComponent(code)}`, { specimen })
+  const found = useApi<FindingsResp>('/api/findings', { days: 28, ward: code })
+  const now = useApi<NowResp>('/api/now')
   const [showSmall, setShowSmall] = useState(false)
 
   if (error) return <p className="error">{t.ward.loadError} {error}</p>
   if (!data) return <p className="muted">{t.ward.loading}</p>
 
   const { ward, four_weeks: fw, twelve_months: tm } = data
+  const findings = (found.data?.findings ?? []).filter(f => !specimen || f.specimen === specimen)
+  const rare = findings.filter(f => RARE.includes(f.phenotype))
   const alerts = fw.phenotypes.filter(p => p.alert)
   const signals = annualSignals(data, t, abLabel)
-  const summary = plainSummary(data, t, signals)
+  const summary = plainSummary(data, t, signals, findings)
   const reportable = tm.pairs.filter(p => p.reportable)
   const small = tm.pairs.filter(p => !p.reportable)
   const pairSignal = (r: WardPair) => rising(r.pct_resistant, r.pct_resistant_prev, r.p_change) || above(r.p_above)
   const nLow = t.common.nLow(meta.min_isolates)
-  const wardName = lang === 'fi' ? ward.name_fi : ward.name_en
+  const name = lang === 'fi' ? ward.name_fi : ward.name_en
   const otherName = lang === 'fi' ? ward.name_en : ward.name_fi
+  const expiry = (now.data?.expiry ?? []).filter(soon)
 
   const pairCols: Column<WardPair>[] = [
     { key: 'org', header: t.common.organism, render: r => <span className="italic">{shortOrg(r.organism)}</span>, sort: r => r.organism },
@@ -107,16 +128,31 @@ export function WardView({ code }: { code: string }) {
     } },
   ]
 
+  const findingCols: Column<Finding>[] = [
+    { key: 'd', header: t.findings.date, render: r => date(r.sample_date), sort: r => r.sample_date },
+    { key: 'p', header: t.findings.patient, render: r => <><span className="num">{r.patient_id}</span> <span className="muted small">{t.findings.sexAge(r.sex, r.age_years)}</span></> },
+    { key: 't', header: t.common.type, render: r => <span title={t.phenotypeHelp[r.phenotype]}>{PHENOTYPE_LABEL[r.phenotype]}</span>, sort: r => r.phenotype },
+    { key: 'o', header: t.common.organism, render: r => <span className="italic">{r.organisms.split(', ').map(shortOrg).join(', ')}</span> },
+    { key: 's', header: t.findings.carrier, sort: r => r.status, render: r => (
+      <>
+        <Status kind={r.status === 'known' ? 'muted' : 'critical'}>{t.findings.status[r.status]}</Status>
+        {r.prev_date && <div className="small muted">{t.findings.prev(date(r.prev_date))}</div>}
+      </>
+    ) },
+    { key: 'ho', header: t.findings.ho, render: r => (r.hospital_onset ? <strong>{t.findings.yes}</strong> : <span className="muted">–</span>), sort: r => (r.hospital_onset ? 0 : 1) },
+    { key: 'mv', header: t.findings.recent, render: r => r.recent_wards.length ? r.recent_wards.map(wardName).join(', ') : <span className="muted">–</span> },
+  ]
+
   return (
     <div className={loading ? 'loading' : undefined} style={{ display: 'grid', gap: 20 }}>
       <div className="view-head">
-        <h1>{wardName}</h1>
+        <h1>{name}</h1>
         <span className="sub">
           {ward.code} · {otherName} · {ward.ward_type === 'in' ? t.ward.inpatient : t.ward.outpatient} · {t.ward.dataThrough(date(data.latest))}
         </span>
       </div>
 
-      <section className={`summary${alerts.length || signals.length ? ' attention' : ''}`} aria-label={t.ward.inShort}>
+      <section className="summary" aria-label={t.ward.inShort}>
         <h2>{t.ward.inShort}</h2>
         {summary.map((line, i) => <p key={i}>{line}</p>)}
       </section>
@@ -134,11 +170,11 @@ export function WardView({ code }: { code: string }) {
         </div>
       </div>
 
-      {/* ---------------- Last 4 weeks ---------------- */}
+      {/* ---------------- 1. Right now: last 4 weeks ---------------- */}
       <section style={{ display: 'grid', gap: 12 }}>
         <div className="section-title">
-          <h2>{t.ward.last4w}</h2>
-          <span className="range">{dateRange(fw.weeks.length >= 4 ? [fw.weeks[fw.weeks.length - 4].slice(0, 10), data.latest] : data.windows['4w'])}</span>
+          <h2>{t.ward.rightNow}</h2>
+          <span className="range">{dateRange(data.windows['4w'])}</span>
         </div>
 
         {alerts.length ? (
@@ -160,7 +196,41 @@ export function WardView({ code }: { code: string }) {
           </div>
         )}
 
+        {rare.length > 0 && (
+          <div className="banner critical" role="alert">
+            <Status kind="critical">{t.status.alert}</Status>
+            <div>
+              <strong>{t.ward.rareTitle}</strong>
+              <ul>
+                {rare.map(r => (
+                  <li key={r.finding_id}>{t.ward.rareItem(PHENOTYPE_LABEL[r.phenotype], r.patient_id, date(r.sample_date), t.findings.status[r.status])}</li>
+                ))}
+              </ul>
+              <span className="secondary">{t.ward.rareText}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <h3>{t.ward.findingsTitle}</h3>
+              <p>{t.ward.findingsSub}</p>
+            </div>
+            <a href={hashFor('findings', { ward: code, days: '28' })}>{t.ward.openFindings} →</a>
+          </div>
+          <DataTable rows={findings} columns={findingCols} rowKey={r => r.finding_id} initialSort={{ key: 'd', desc: true }}
+            highlight={r => r.status !== 'known'} empty={t.ward.findingsNone} pageSize={10} />
+        </div>
+
         <div className="tiles">
+          <div className="tile" title={t.ward.samplesHelp}>
+            <span className="tile-label">{t.ward.samples}</span>
+            <span className="tile-value">{num(fw.samples.observed)}</span>
+            <span className="tile-sub">{t.ward.usuallyIn4w(num(fw.samples.expected, 0))}</span>
+            <WeeklyColumns compact height={44} values={fw.samples.weekly} weeks={fw.weeks}
+              usualPerWeek={fw.samples.expected / 4} label={t.ward.samples} />
+          </div>
           <div className="tile">
             <span className="tile-label">{t.ward.newIsolates}</span>
             <span className="tile-value">{num(fw.isolates.observed)}</span>
@@ -182,10 +252,41 @@ export function WardView({ code }: { code: string }) {
         </div>
       </section>
 
-      {/* ---------------- Last 12 months ---------------- */}
+      {/* ---------------- 2. Which antibiotics work here: last 12 months ---------------- */}
       <section style={{ display: 'grid', gap: 12 }}>
         <div className="section-title">
-          <h2>{t.ward.last12m}</h2>
+          <h2>{t.ward.worksTitle}</h2>
+          <span className="range">{dateRange(data.windows['12m'])}</span>
+        </div>
+        <div className="card" style={{ display: 'grid', gap: 12 }}>
+          <p className="small secondary">{t.ward.worksSub(meta.min_isolates)}</p>
+          <WardGrid pairs={tm.pairs} intrinsic={tm.intrinsic} organismOrder={tm.organism_mix.map(o => o.organism)} />
+          <BandLegend><span>{t.abg.urineOnly}</span></BandLegend>
+          {expiry.length > 0 && (
+            <p className="small">
+              <strong>{t.ward.acrossHospital}</strong>{' '}
+              {expiry.map((e, i) => (
+                <span key={e.organism + e.antibiotic_code}>
+                  {i > 0 && ' · '}
+                  <a href={hashFor('trends', { org: e.organism, ab: e.antibiotic_code })}>
+                    <span className="italic">{shortOrg(e.organism)}</span> + {abLabel(e.antibiotic_code)}
+                  </a>
+                  {': '}
+                  {e.status === 'crossed'
+                    ? (e.cross_date ? t.expiry.crossed(monthYear(e.cross_date)) : t.expiry.crossedNoDate)
+                    : t.expiry.crossing(num(e.months_left, 0), e.cross_date ? monthYear(e.cross_date) : '—')}
+                </span>
+              ))}
+            </p>
+          )}
+          <div className="link-row"><a href={hashFor('treatment')}>{t.ward.treatLink} →</a></div>
+        </div>
+      </section>
+
+      {/* ---------------- 3. Getting worse? Last 12 months vs the year before ---------------- */}
+      <section style={{ display: 'grid', gap: 12 }}>
+        <div className="section-title">
+          <h2>{t.ward.worseTitle}</h2>
           <span className="range">{t.ward.comparedWith(dateRange(data.windows['12m']), dateRange(data.windows['12m_prev']))}</span>
         </div>
 
@@ -225,7 +326,11 @@ export function WardView({ code }: { code: string }) {
             </div>
           )}
         </div>
+      </section>
 
+      {/* ---------------- 4. Details ---------------- */}
+      <section style={{ display: 'grid', gap: 12 }}>
+        <h2>{t.ward.detailsTitle}</h2>
         <div className="card">
           <div className="card-head">
             <h3>{t.ward.resistanceHere}</h3>
@@ -247,38 +352,37 @@ export function WardView({ code }: { code: string }) {
             ]} />
           )}
         </div>
-      </section>
 
-      <div className="grid-2">
-        <div className="card">
-          <div className="card-head"><h3>{t.ward.organismsFound}</h3><p>{t.ward.organismsSub}</p></div>
-          <BarList ariaLabel={t.ward.organismsFound} items={tm.organism_mix.slice(0, 10).map(o => ({
-            key: o.organism,
-            label: <span className="italic">{shortOrg(o.organism)}</span>,
-            value: o.n,
-            display: num(o.n),
-            tooltip: <><div className="tt-title italic">{o.organism}</div><div className="tt-value">{num(o.n)} {t.common.isolates}</div><div>{t.ward.ofWard(pct(o.n / tm.first_isolates))}</div></>,
-          }))} />
+        <div className="grid-2">
+          <div className="card">
+            <div className="card-head"><h3>{t.ward.organismsFound}</h3><p>{t.ward.organismsSub}</p></div>
+            <BarList ariaLabel={t.ward.organismsFound} items={tm.organism_mix.slice(0, 10).map(o => ({
+              key: o.organism,
+              label: <span className="italic">{shortOrg(o.organism)}</span>,
+              value: o.n,
+              display: num(o.n),
+              tooltip: <><div className="tt-title italic">{o.organism}</div><div className="tt-value">{num(o.n)} {t.common.isolates}</div><div>{t.ward.ofWard(pct(o.n / tm.first_isolates))}</div></>,
+            }))} />
+          </div>
+
+          <section className="card">
+            <div className="card-head"><h3>{t.ward.historyTitle}</h3><p>{t.ward.historySub}</p></div>
+            <DataTable
+              rows={fw.phenotypes.flatMap(p => p.history.map(h => ({ ...h, phenotype: p.phenotype })))}
+              rowKey={r => r.phenotype + r.window_end}
+              initialSort={{ key: 'week', desc: true }}
+              empty={t.ward.noHistory}
+              columns={[
+                { key: 'ph', header: t.common.type, render: r => PHENOTYPE_LABEL[r.phenotype], sort: r => r.phenotype },
+                { key: 'week', header: t.ward.windowEnding, render: r => date(r.window_end.slice(11, 21)), sort: r => r.window_end },
+                { key: 'obs', header: t.common.cases, numeric: true, render: r => r.observed, sort: r => r.observed },
+                { key: 'exp', header: t.common.usual, numeric: true, render: r => num(r.expected, 1), sort: r => r.expected },
+                { key: 'p', header: t.common.p, title: t.common.pHelp, numeric: true, render: r => pValue(r.p_value), sort: r => r.p_value },
+              ]}
+            />
+          </section>
         </div>
-
-        {/* ---------------- Alert history ---------------- */}
-        <section className="card">
-          <div className="card-head"><h3>{t.ward.historyTitle}</h3><p>{t.ward.historySub}</p></div>
-          <DataTable
-            rows={fw.phenotypes.flatMap(p => p.history.map(h => ({ ...h, phenotype: p.phenotype })))}
-            rowKey={r => r.phenotype + r.window_end}
-            initialSort={{ key: 'week', desc: true }}
-            empty={t.ward.noHistory}
-            columns={[
-              { key: 'ph', header: t.common.type, render: r => PHENOTYPE_LABEL[r.phenotype], sort: r => r.phenotype },
-              { key: 'week', header: t.ward.windowEnding, render: r => date(r.window_end.slice(11, 21)), sort: r => r.window_end },
-              { key: 'obs', header: t.common.cases, numeric: true, render: r => r.observed, sort: r => r.observed },
-              { key: 'exp', header: t.common.usual, numeric: true, render: r => num(r.expected, 1), sort: r => r.expected },
-              { key: 'p', header: t.common.p, title: t.common.pHelp, numeric: true, render: r => pValue(r.p_value), sort: r => r.p_value },
-            ]}
-          />
-        </section>
-      </div>
+      </section>
     </div>
   )
 }

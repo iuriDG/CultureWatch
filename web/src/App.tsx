@@ -1,21 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
-import { readHash, replaceHashParams } from './hashParams'
+import { hashFor, readHash, replaceHashParams } from './hashParams'
 import { AsOfContext, useApi } from './api'
 import { SearchBox } from './components/SearchBox'
 import { ShareDialog } from './components/ShareDialog'
 import { TimeMachine } from './components/TimeMachine'
 import { date, setFormatLang } from './format'
 import {
-  DEFAULT_FILTERS, LangContext, loadLang, loadMyWard, makeMetaHelpers, MetaContext, saveLang, saveMyWard, useT, type Filters,
+  DEFAULT_FILTERS, LangContext, loadLang, loadMyWard, makeMetaHelpers, MetaContext, saveLang, saveMyWard, type Filters,
 } from './state'
 import { STRINGS, type Lang } from './strings'
-import type { Meta, TimelineAlert, Ward } from './types'
+import type { Meta, TimelineAlert } from './types'
 import { AlertsView } from './views/AlertsView'
 import { AntibiogramView } from './views/AntibiogramView'
 import { FindingsView } from './views/FindingsView'
 import { HospitalView } from './views/HospitalView'
 import { ImportView } from './views/ImportView'
 import { MethodsView } from './views/MethodsView'
+import { NowView } from './views/NowView'
 import { SpreadView } from './views/SpreadView'
 import { TreatmentView } from './views/TreatmentView'
 import { TrendsView } from './views/TrendsView'
@@ -25,13 +26,14 @@ import { WeeklyView } from './views/WeeklyView'
 // Share / QR button is hidden for now; set to true to bring it back.
 const SHOW_SHARE = false
 
-const ROUTES = ['ward', 'findings', 'alerts', 'spread', 'weekly', 'hospital', 'antibiogram', 'treatment', 'trends', 'data', 'methods'] as const
+const ROUTES = ['ward', 'now', 'findings', 'alerts', 'spread', 'weekly', 'hospital', 'antibiogram', 'treatment', 'trends', 'data', 'methods'] as const
 type Route = (typeof ROUTES)[number]
 
 // Main tabs, grouped by who uses them; Import and Methods sit apart as small links.
+// Infection control opens on "Right now": every ward's last 4 weeks, the unit's first check of the day.
 const GROUPS = [
   { id: 'ward', routes: ['ward'] },
-  { id: 'control', routes: ['findings', 'alerts', 'spread', 'weekly'] },
+  { id: 'control', routes: ['now', 'findings', 'alerts', 'spread', 'weekly'] },
   { id: 'analysis', routes: ['hospital', 'antibiogram', 'treatment', 'trends'] },
 ] as const satisfies readonly { id: string; routes: readonly Route[] }[]
 
@@ -62,11 +64,14 @@ export function App() {
   const meta = useApi<Meta>('/api/meta')
   const [route, setRoute] = useState<Route>(readRoute)
   const [params, setParams] = useState(() => readHash().params)
-  // Only the start page's replay button needs the alert list.
-  const timeline = useApi<TimelineAlert[]>(route === 'ward' ? '/api/alert-timeline' : null, {}, { live: true })
+  // Only the replay button on the front pages needs the alert list.
+  const front = route === 'ward' || route === 'now'
+  const timeline = useApi<TimelineAlert[]>(front ? '/api/alert-timeline' : null, {}, { live: true })
   const helpers = useMemo(() => (meta.data ? makeMetaHelpers(meta.data, lang) : null), [meta.data, lang])
   const [myWard, setMyWardState] = useState<string | null>(loadMyWard)
-  const [filters, setFiltersState] = useState<Filters>(() => filtersFromParams(readHash().params, DEFAULT_FILTERS))
+  // Only the analysis views read the shared filters from the address (#/findings?ward=ICU must not filter them)
+  const [filters, setFiltersState] = useState<Filters>(() =>
+    FILTER_ROUTES.includes(readRoute()) ? filtersFromParams(readHash().params, DEFAULT_FILTERS) : DEFAULT_FILTERS)
   const [copied, setCopied] = useState(false)
   const [asOf, setAsOf] = useState<string | null>(null)
   const [autoPlay, setAutoPlay] = useState(false)
@@ -75,9 +80,10 @@ export function App() {
   useEffect(() => {
     const onHash = () => {
       const { params: p } = readHash()
-      setRoute(readRoute())
+      const r = readRoute()
+      setRoute(r)
       setParams(p)
-      setFiltersState(f => filtersFromParams(p, f))
+      if (FILTER_ROUTES.includes(r)) setFiltersState(f => filtersFromParams(p, f))
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
@@ -134,6 +140,7 @@ export function App() {
     }
     setAutoPlay(true)
     setAsOf(weeks[weeks.length - 1])
+    go('ward')
   }
   const group = GROUPS.find(g => (g.routes as readonly Route[]).includes(route))
 
@@ -190,22 +197,13 @@ export function App() {
             {asOf && <TimeMachine asOf={asOf} setAsOf={setAsOf} myWard={known} onExit={() => setAsOf(null)} autoPlay={autoPlay} />}
           </div>
           <main>
-            {route === 'ward' && !asOf && (
-              <div className="demo-callout">
-                <div>
-                  <strong>{t.demo.title}</strong>
-                  <span className="secondary">{t.demo.text}</span>
-                </div>
-                <button type="button" className="btn primary"
-                  onClick={startDemo}>
-                  {t.demo.cta}
-                </button>
-              </div>
-            )}
+            {/* Front page: my ward, or (no ward chosen yet) the whole hospital with a ward picker */}
             {route === 'ward' && (shownWard
               ? <WardView key={shownWard} code={shownWard} />
-              : <WardPicker wards={helpers.meta.wards} onPick={setMyWard} />)}
-            {route === 'findings' && <FindingsView key={params.toString()} initialQuery={params.get('q') ?? ''} allTime={params.get('all') === '1'} />}
+              : <NowView picker onPick={setMyWard} />)}
+            {route === 'now' && <NowView onPick={code => { window.location.hash = hashFor('ward', { code }) }} />}
+            {route === 'findings' && <FindingsView key={params.toString()} initialQuery={params.get('q') ?? ''} allTime={params.get('all') === '1'}
+              initialWard={params.get('ward') ?? ''} initialDays={params.get('days') === '28' ? 28 : 7} />}
             {route === 'alerts' && <AlertsView key={params.get('type') ?? ''} myWard={known} initialPhenotype={params.get('type')} />}
             {route === 'spread' && <SpreadView />}
             {route === 'weekly' && <WeeklyView />}
@@ -215,39 +213,19 @@ export function App() {
             {route === 'trends' && <TrendsView key={trendPair ? trendPair.organism + trendPair.antibiotic : ''} filters={filters} setFilters={setFilters} initialPair={trendPair} />}
             {route === 'data' && <ImportView />}
             {route === 'methods' && <MethodsView />}
+            {front && !asOf && (
+              <div className="demo-callout">
+                <div>
+                  <strong>{t.demo.title}</strong>
+                  <span className="secondary">{t.demo.text}</span>
+                </div>
+                <button type="button" className="btn primary" onClick={startDemo}>{t.demo.cta}</button>
+              </div>
+            )}
           </main>
           {sharing && <ShareDialog onClose={() => setSharing(false)} />}
         </AsOfContext.Provider>
       </MetaContext.Provider>
     </LangContext.Provider>
-  )
-}
-
-function WardPicker({ wards, onPick }: { wards: Ward[]; onPick: (code: string) => void }) {
-  const { t, lang } = useT()
-  const groups = [
-    { title: t.picker.inpatient, items: wards.filter(w => w.ward_type === 'in') },
-    { title: t.picker.outpatient, items: wards.filter(w => w.ward_type === 'out') },
-  ]
-  return (
-    <div style={{ display: 'grid', gap: 20 }}>
-      <div className="view-head">
-        <h1>{t.picker.title}</h1>
-        <span className="sub">{t.picker.sub}</span>
-      </div>
-      {groups.map(g => (
-        <section key={g.title} style={{ display: 'grid', gap: 10 }}>
-          <h2>{g.title}</h2>
-          <div className="ward-grid">
-            {g.items.map(w => (
-              <button key={w.ward_code} type="button" className="ward-card" onClick={() => onPick(w.ward_code)}>
-                <strong>{lang === 'fi' ? w.ward_fi : w.ward_en}</strong>
-                <span className="code">{w.ward_code} · {lang === 'fi' ? w.ward_en : w.ward_fi}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
   )
 }

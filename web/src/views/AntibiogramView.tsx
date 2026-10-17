@@ -1,14 +1,17 @@
 import { useApi } from '../api'
 import { FilterBar } from '../components/FilterBar'
 import { useTooltip } from '../components/Tooltip'
+import { BandLegend, bandClass } from '../components/WardGrid'
 import { csvCell, date, num, pct } from '../format'
+import { hashFor } from '../hashParams'
 import { filterParams, useMeta, useT, type Filters } from '../state'
 import type { AbCell, AntibiogramResp } from '../types'
 
+/** The six European (EARS-Net / WHO CAESAR) bands; grey when too few isolates or naturally resistant. */
 function band(c: AbCell | undefined): string {
   if (!c) return 'empty'
   if (c.pct_resistant === null) return 'grey'
-  return c.pct_resistant < 0.1 ? 'green' : c.pct_resistant <= 0.2 ? 'amber' : 'red'
+  return bandClass(c.pct_resistant)
 }
 
 function toCsv(d: AntibiogramResp, cell: (o: string, a: string) => AbCell | undefined): string {
@@ -54,8 +57,11 @@ export function AntibiogramView({ filters, setFilters }: { filters: Filters; set
         : <div className="tt-value">{t.charts.resistant(pct(c.pct_resistant))}</div>}
       <div>{t.common.resistedOf(num(c.n_resistant), num(c.n_tested))}</div>
       {c.ci_low !== null && c.ci_high !== null && <div className="secondary">{t.common.ci(pct(c.ci_low), pct(c.ci_high))}</div>}
+      {!c.intrinsic && <div className="secondary">{t.abg.clickTip}</div>}
     </>
   )
+  // A cell opens its trend over time (the shared filters carry over)
+  const open = (c: AbCell) => { window.location.hash = hashFor('trends', { org: c.organism, ab: c.antibiotic_code }) }
 
   // Cell text: the % without its sign (the column says it), or IR / n<30
   const cellText = (c: AbCell | undefined) =>
@@ -76,13 +82,7 @@ export function AntibiogramView({ filters, setFilters }: { filters: Filters; set
       {data && (
         <div className={`card${loading ? ' loading' : ''}`}>
           <div className="card-head">
-            <div className="legend">
-              <span><span className="sw" style={{ background: 'color-mix(in srgb, var(--good) 22%, var(--surface))' }} />{t.abg.lt10}</span>
-              <span><span className="sw" style={{ background: 'color-mix(in srgb, var(--warning) 32%, var(--surface))' }} />{t.abg.mid}</span>
-              <span><span className="sw" style={{ background: 'color-mix(in srgb, var(--critical) 26%, var(--surface))' }} />{t.abg.gt20}</span>
-              <span><span className="sw" style={{ background: 'var(--surface-2)' }} />{t.abg.grey(meta.min_isolates)}</span>
-              <span>{t.abg.urineOnly}</span>
-            </div>
+            <BandLegend><span>{t.abg.urineOnly}</span></BandLegend>
             <span className="no-print" style={{ display: 'inline-flex', gap: 8 }}>
               <button type="button" className="btn" onClick={download}>{t.common.downloadCsv}</button>
               <button type="button" className="btn" onClick={() => window.print()}>{t.print.button}</button>
@@ -108,8 +108,11 @@ export function AntibiogramView({ filters, setFilters }: { filters: Filters; set
                         return (
                           <td
                             key={a}
-                            className={band(c)}
+                            className={c && !c.intrinsic ? `${band(c)} link` : band(c)}
                             tabIndex={c ? 0 : undefined}
+                            role={c && !c.intrinsic ? 'link' : undefined}
+                            onClick={c && !c.intrinsic ? () => open(c) : undefined}
+                            onKeyDown={c && !c.intrinsic ? e => { if (e.key === 'Enter') open(c) } : undefined}
                             onPointerMove={c ? e => tip.show(e, tipFor(c)) : undefined}
                             onPointerLeave={tip.hide}
                             onFocus={c ? e => tip.showAt(e.currentTarget, tipFor(c)) : undefined}
