@@ -302,20 +302,21 @@ The tabs are grouped by who uses them: **My ward** (ward staff), **Infection con
 | **Infection control** | Findings | The infection unit's daily to-do list: every new resistant bacterium (MRSA, ESBL, VRE, CPE), whether the patient is a **new or known carrier**, where the patient was before, and tick-boxes for who has been told. Searchable, export as a line list. |
 | | Alerts | All wards at once: which have more cases than normal right now, plus every past alert. |
 | | Spread | **Where new carriers had been in the 30 days before their finding**, as a flow chart from ward to ward. Each ward has its own colour; hover a ward or band to highlight its flows. A lead for infection control, not proof of transmission. |
-| | Weekly summary | One printable page for the infection unit: wards on alert, new resistant findings and results to check from the last 7 days. |
-| **Lab** | Result checks | The checks a lab scientist does before releasing results, run on every isolate (EUCAST rules): results that contradict each other, results that are biologically impossible, and unusual resistance that needs a confirmation test. Searchable. |
+| | Weekly summary | One printable page for the infection unit: wards on alert and new resistant findings from the last 7 days. |
 | **Analysis** | Hospital | The big picture: totals, ward hotspots, resistance **by the patient's home area**, hospital vs outpatient resistance. |
 | | Antibiogram | Colour table: how often each antibiotic fails against each bacterium. Download as CSV or **print / save as PDF** as a one-page cumulative antibiogram. |
 | | Treatment guide | For an infection type, which antibiotic would have worked for most past patients. |
 | | Trends | Is resistance rising? The chart comes first; below it the **guideline expiry date**: when a common antibiotic crosses the 20% line where doctors stop starting it before the lab result. |
-| Top right | Import | Upload new lab results as CSV files. Every file is checked first (the pipeline's 16 checks and the result checks); nothing changes unless all checks pass, and the original data can always be restored. |
+| Top right | Import | Upload new lab results as CSV files. Every file is checked first (the pipeline's 16 data checks); nothing changes unless all checks pass, and the original data can always be restored. |
 | | Methods | Every rule and calculation, written out, plus how a resistant finding is handled. |
-| Top bar | **Historical replay** | Rewind to any week and press Play: the whole app shows what it would have shown that day. **Replay a past outbreak** on the start page opens the clearest outbreak in the data (ICU, MRSA, March 2026) and plays until the alert fires. |
-| | Custom dates | Every period choice (Hospital, Antibiogram, Treatment guide, Findings, Result checks, Spread) also has **Custom dates**: pick any From and To day. Each patient's bacterium still counts once within the chosen dates. |
+| Top bar | **Quick search** | Type a ward, bacterium, antibiotic, resistance type or patient ID (press `/` to start). **The answer shows in the list right away**, e.g. *E. coli + trimethoprim: 20.1% resistant in the last 12 months · over the limit since ~Jan 2026*, *ICU: no alert now · MRSA 19.7%*, *P003612: new MRSA carrier, 7 Mar 2026*. Enter opens the full view. Works in Finnish too (*teho*, *trimetopriimi*). |
+| | **Copy link** | Every view has its own address with its filters (e.g. `#/antibiogram?specimen=urine&time=4w`, `#/trends?org=Escherichia+coli&ab=TMP`). Copy link, bookmark or share it, and it reopens exactly the same view. |
+| | **Historical replay** | Rewind to any week and press Play: the whole app shows what it would have shown that day. **Replay a past outbreak** on the start page opens the clearest outbreak in the data (ICU, MRSA, March 2026) and plays until the alert fires. |
+| | Custom dates | Every period choice (Hospital, Antibiogram, Treatment guide, Findings, Spread) also has **Custom dates**: pick any From and To day. Each patient's bacterium still counts once within the chosen dates. |
 | | FI / EN | The whole app in Finnish and English, with Finnish number and date formats. |
 | | Logo | Back to the start page. |
 | Everywhere | Tables for real volumes | Every table shows 25 rows per page; sorting and search work across all rows. Filters beyond time and specimen sit behind **More filters**. Works on phones. |
-| | Verified numbers | `verify_numbers.py` recomputes the numbers from the raw files with separate code and compares them with the app (35/35 match), including spread, home areas, the weekly summary and custom date ranges. |
+| | Verified numbers | `verify_numbers.py` recomputes the numbers from the raw files with separate code and compares them with the app (34/34 match), including spread, home areas, the weekly summary, custom date ranges and the quick-search answers. |
 
 The **Share / Jaa** QR code is built in but hidden for now (`SHOW_SHARE` in `web/src/App.tsx`).
 
@@ -343,7 +344,6 @@ CultureWatch/
 ├── antibiogram.py                    ← step 2: antibiogram tables and heatmaps
 ├── treatment_guide.py                ← step 3: antibiotic coverage per infection scenario
 ├── hospital_trends.py                ← step 4: hospital vs community, wards, trends, alerts, carriers, expiry dates
-├── result_checks.py                  ← EUCAST-style result checks on every isolate
 │
 ├── api/                              ← small Python API used by the web app
 │   ├── main.py                       ←   every endpoint; calls the analysis files above

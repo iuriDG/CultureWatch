@@ -18,7 +18,7 @@ export interface Column<T> {
  * Sortable table that stays usable at real-hospital volumes: rows are paged (sorting and search
  * run over all rows, not just the visible page), and `search` adds a text filter box.
  */
-export function DataTable<T>({ rows, columns, rowKey, initialSort, highlight, empty, search, pageSize = PAGE_SIZE }: {
+export function DataTable<T>({ rows, columns, rowKey, initialSort, highlight, empty, search, initialQuery = '', pageSize = PAGE_SIZE }: {
   rows: T[]
   columns: Column<T>[]
   rowKey: (row: T) => string
@@ -27,11 +27,13 @@ export function DataTable<T>({ rows, columns, rowKey, initialSort, highlight, em
   empty?: string
   /** text a row can be found by; enables the search box */
   search?: (row: T) => string
+  /** search text to start with (e.g. from a link) */
+  initialQuery?: string
   pageSize?: number
 }) {
   const { t } = useT()
   const [sort, setSort] = useState(initialSort)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [page, setPage] = useState(0)
 
   const matched = useMemo(() => {

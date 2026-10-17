@@ -3,6 +3,7 @@ Thin layer on purpose: every number comes from cw_utils / antibiogram / treatmen
 so every view shows the same numbers.
 Run from the CultureWatch folder:  uvicorn api.main:app --reload --port 8000"""
 import json
+import re
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
@@ -17,7 +18,6 @@ import cw_utils as cw
 import antibiogram as ab
 import treatment_guide as tg
 import hospital_trends as ht
-import result_checks as rc
 from api import importer
 
 app = FastAPI(title="CultureWatch API")
@@ -213,35 +213,6 @@ def findings(days: int = 7, phenotype: Literal["esbl", "mrsa", "vre", "cpe"] | N
                                           prev_date=f.prev_date.dt.date.astype(str).where(f.prev_date.notna()))))
 
 
-@lru_cache(maxsize=1)
-def checks_all():
-    """Result checks on every isolate, once per data load (rules do not depend on the date)."""
-    d = data()
-    ev = rc.evaluate(d.iso_all, d.ast_all)
-    info = d.iso_all[["isolate_id", "patient_id", "sample_date", "ward_code", "specimen", "organism"]]
-    return ev.merge(info, on="isolate_id", how="left")
-
-
-@app.get("/api/checks")
-def checks(window: Window | None = None, ward: str | None = None, date_from: date | None = None,
-           date_to: date | None = None, s: Snap = Depends(snap)):
-    """Result checks before release: per rule how many isolates were checked and flagged in the period,
-    and the flagged isolates. window=None means all data up to the (time machine) date."""
-    ev = checks_all()
-    rng = custom_range(date_from, date_to, s)
-    end = rng[1] if rng else s.latest
-    ev = ev[ev.sample_date <= end]
-    start = rng[0] if rng else cw.window_dates(s.latest, window)[0] if window else ev.sample_date.min()
-    ev = ev[ev.sample_date >= start]
-    if ward:
-        ev = ev[ev.ward_code == ward]
-    flagged = ev[ev.flagged].sort_values(["sample_date", "isolate_id"], ascending=[False, True])
-    return dict(start=pd.Timestamp(start).date().isoformat(), end=end.date().isoformat(),
-                counts=rc.category_counts(ev), rules=records(rc.summary(ev)),
-                flagged=records(flagged.assign(sample_date=flagged.sample_date.dt.date.astype(str))
-                                .drop(columns=["flagged"])))
-
-
 @app.get("/api/spread")
 def spread(window: Literal["4w", "12m", "all"] = "12m", phenotype: Literal["esbl", "mrsa", "vre", "cpe"] | None = None,
            date_from: date | None = None, date_to: date | None = None, s: Snap = Depends(snap)):
@@ -274,8 +245,7 @@ def home_areas(f: dict = Depends(filter_params), s: Snap = Depends(snap)):
 
 @app.get("/api/weekly")
 def weekly(s: Snap = Depends(snap)):
-    """One-page summary of the latest 7 days for the infection unit: new carriers, wards on alert now,
-    and results needing action before release."""
+    """One-page summary of the latest 7 days for the infection unit: new carriers and wards on alert now."""
     end = s.latest
     start = end - pd.Timedelta(days=6)
     f = ht.carrier_findings(data().iso_all, start, end, phenotypes=PHENOTYPES)
@@ -284,13 +254,10 @@ def weekly(s: Snap = Depends(snap)):
     for ph in PHENOTYPES:
         st = ht.current_status(ht.weekly_counts(s.iso, ph))
         on_alert += [dict(r, phenotype=ph) for r in records(st[st.alert])]
-    ev = checks_all()
-    ev = ev[(ev.sample_date >= start) & (ev.sample_date <= end) & ev.flagged]
     return dict(start=start.date().isoformat(), end=end.date().isoformat(),
                 findings=records(f.assign(sample_date=f.sample_date.dt.date.astype(str),
                                           prev_date=f.prev_date.dt.date.astype(str).where(f.prev_date.notna()))),
-                alerts=on_alert, checks=rc.category_counts(ev),
-                checks_flagged=records(ev.assign(sample_date=ev.sample_date.dt.date.astype(str)).drop(columns=["flagged"])))
+                alerts=on_alert)
 
 
 @app.get("/api/alert-timeline")
@@ -519,7 +486,7 @@ def local_only(request: Request):
 
 
 def reload_data():
-    for cached in (data, _snapshot, ward_visits, checks_all, _ward_view, alert_timeline):
+    for cached in (data, _snapshot, ward_visits, _ward_view, alert_timeline, _search_index):
         cached.cache_clear()
 
 
@@ -577,6 +544,114 @@ def import_reset():
     importer.reset()
     reload_data()
     return importer.status()
+
+
+# ---------- Quick search: instant answers for a ward, bacterium, antibiotic, resistance type or patient ----------
+@lru_cache(maxsize=4)
+def _search_index(as_of: str):
+    """Everything the quick search answers from, built once per (time machine) date with the same functions as
+    the views: last-12-month resistance per pair and per ward, current 4-week alerts, guideline expiry."""
+    d = data()
+    s = snap(None if as_of == latest().date().isoformat() else date.fromisoformat(as_of))
+    w12 = cw.window_dates(s.latest, "12m")
+    pairs = cw.resistance_table(cw.window_view(s.ast_all, *w12)).set_index(["organism", "antibiotic_code"])
+    iso12 = cw.window_view(s.iso_all, *w12)
+    wards = {}
+    for code in d.wards.ward_code:
+        wi = iso12[iso12.ward_code == code]
+        wards[code] = dict(first_isolates=len(wi), mrsa=phenotype_rate(wi, "mrsa"), esbl=phenotype_rate(wi, "esbl"), alerts=[])
+    phenotypes = {}
+    for ph in PHENOTYPES:
+        st = ht.current_status(ht.weekly_counts(s.iso, ph))
+        on = st[st.alert].ward_code.tolist()
+        for code in on:
+            wards[code]["alerts"].append(ph)
+        phenotypes[ph] = dict(alert_wards=on, cases_4w=int(st.observed.sum()))
+    exp, _ = ht.expiry_watch(s.ast, end=s.latest)
+    expiry = exp.set_index(["organism", "antibiotic_code"])
+    organisms = iso12.organism.value_counts()
+    return dict(s=s, pairs=pairs, wards=wards, phenotypes=phenotypes, expiry=expiry, organisms=organisms)
+
+
+def _norm(text: str) -> str:
+    return re.sub(r"[^0-9a-zåäö]+", " ", str(text).lower()).strip()
+
+
+def _pair_answer(ix, org, ab_code):
+    row = ix["pairs"].loc[(org, ab_code)] if (org, ab_code) in ix["pairs"].index else None
+    out = dict(kind="pair", organism=org, antibiotic_code=ab_code, n=0, pct=None, intrinsic=False, status=None,
+               cross_date=None, months_left=None)
+    if row is not None:
+        out.update(n=int(row.n_tested), intrinsic=bool(row.intrinsic),
+                   pct=float(row.pct_resistant) if row.reportable else None)
+    if (org, ab_code) in ix["expiry"].index:
+        e = ix["expiry"].loc[(org, ab_code)]
+        if e.status in ("crossing", "crossed", "rising"):
+            out.update(status=e.status, cross_date=e.cross_date if isinstance(e.cross_date, str) else None,
+                       months_left=float(e.months_left) if pd.notna(e.months_left) else None)
+    return out
+
+
+def _top_resistance(ix, organism=None, antibiotic=None, k=2):
+    t = ix["pairs"].reset_index()
+    t = t[t.reportable & ~t.intrinsic]
+    t = t[t.organism == organism] if organism else t[t.antibiotic_code == antibiotic]
+    t = t.sort_values("pct_resistant", ascending=False).head(k)
+    return [dict(organism=r.organism, antibiotic_code=r.antibiotic_code, pct=float(r.pct_resistant)) for r in t.itertuples()]
+
+
+@app.get("/api/search")
+def search(q: str, s: Snap = Depends(snap)):
+    """Match a free-text query to wards, bacteria, antibiotics, resistance types, patients and answer each
+    straight away (same numbers as the views; follows the time machine)."""
+    q = q[:100]
+    tokens = [t for t in _norm(q).split() if len(t) >= 2]
+    ix = _search_index(s.latest.date().isoformat())
+    d = data()
+    results = []
+
+    # Patient ID: P003612, p3612
+    if (m := re.search(r"\bp\s?0*(\d{1,6})\b", q.lower())):
+        pid = f"P{int(m.group(1)):06d}"
+        visits = ward_visits()
+        v = visits[(visits.patient_id == pid) & (visits.sample_date <= s.latest)].sort_values("sample_date")
+        if len(v):
+            mine = d.iso_all[(d.iso_all.patient_id == pid) & (d.iso_all.sample_date <= s.latest)]
+            f = ht.carrier_findings(mine, mine.sample_date.min() if len(mine) else s.latest, s.latest) if len(mine) else mine
+            last = v.iloc[-1]
+            results.append(dict(kind="patient", patient_id=pid, samples=len(v), last_date=last.sample_date.date().isoformat(),
+                                last_ward=last.ward_code,
+                                findings=[dict(phenotype=r.phenotype, status=r.status, sample_date=r.sample_date.date().isoformat(),
+                                               ward_code=r.ward_code) for r in f.head(3).itertuples()] if len(f) else []))
+
+    def score(names):
+        """How many query words match the start of a word in any of the names (or a whole short code)."""
+        words = [w for n in names if n for w in _norm(n).split()]
+        return sum(1 for t in tokens if any(w == t or (len(t) >= 3 and w.startswith(t)) for w in words))
+
+    def best(scored, k):
+        scored = sorted(scored, key=lambda x: -x[0])
+        return [key for sc, key in scored if sc and sc == scored[0][0]][:k] if scored and scored[0][0] else []
+
+    orgs = best([(score([o]), o) for o in ix["organisms"].index], 2)
+    abx = best([(score([a.antibiotic_code, a.antibiotic, a.antibiotic_fi]), a.antibiotic_code) for a in d.abx.itertuples()], 2)
+
+    if orgs and abx:
+        results += [_pair_answer(ix, o, a) for o in orgs for a in abx][:3]
+    elif orgs:
+        results += [dict(kind="organism", organism=o, first_isolates=int(ix["organisms"].get(o, 0)),
+                         top=_top_resistance(ix, organism=o)) for o in orgs]
+    elif abx:
+        results += [dict(kind="antibiotic", antibiotic_code=a, top=_top_resistance(ix, antibiotic=a)) for a in abx]
+
+    for code in best([(score([w.ward_code, w.ward_en, w.ward_fi]), w.ward_code) for w in d.wards.itertuples()], 3):
+        results.append(dict(kind="ward", ward_code=code, **ix["wards"][code]))
+
+    for ph in PHENOTYPES:
+        if ph in tokens:
+            results.append(dict(kind="phenotype", phenotype=ph, **ix["phenotypes"][ph]))
+
+    return dict(q=q, as_of=s.latest.date().isoformat(), results=results[:7])
 
 
 # ---------- Serve the built web UI (web/dist) from the same origin, for sharing one public link ----------

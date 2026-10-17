@@ -132,23 +132,6 @@ raw_counts = pd.concat(fs).value_counts().to_dict()
 app_counts = pd.Series([f["status"] for f in api("findings", days=7)["findings"]], dtype=object).value_counts().to_dict()
 check("findings last 7 days: count by carrier status", raw_counts, app_counts)
 
-# 8. Result checks, all time: contradictions, natural-resistance violations, unconfirmed ceftriaxone resistance
-w = sus.pivot_table(index="isolate_id", columns="antibiotic_code", values="result", aggfunc="first")
-x = isolates.set_index("isolate_id").join(w)
-sa, eckp = x[x.organism == "Staphylococcus aureus"], x[x.organism.isin(["Escherichia coli", "Klebsiella pneumoniae"])]
-entc = x[x.organism.isin(["Enterococcus faecalis", "Enterococcus faecium"])]
-contradictions = int(((sa.mrsa == 1) & (sa.FOX == "S")).sum() + ((sa.FOX == "R") & (sa.mrsa != 1)).sum()
-                     + ((eckp.esbl == 1) & (eckp.CRO == "S")).sum()
-                     + ((entc.vre == 1) & (entc.VAN == "S")).sum() + ((entc.VAN == "R") & (entc.vre != 1)).sum())
-natural = int(((x.organism.isin(["Klebsiella pneumoniae", "Klebsiella oxytoca", "Citrobacter freundii"])) & (x.AMP == "S")).sum()
-              + ((x.organism == "Proteus mirabilis") & (x.NIT == "S")).sum())
-unconfirmed = int(((eckp.CRO == "R") & (eckp.esbl != 1) & (eckp.cpe != 1)).sum())
-c = api("checks")["counts"]
-check("result checks all time: contradictions", contradictions, c["contradiction"])
-check("result checks all time: natural-resistance violations", natural, c["impossible"])
-check("result checks all time: ceftriaxone-R without ESBL/CPE (confirm)", unconfirmed,
-      next(r["flagged"] for r in api("checks")["rules"] if r["rule"] == "esc_r_unconfirmed"))
-
 # 9. Spread between wards, last 12 months: new carriers, how many had been on another ward in the 30 days
 #    before (any culture counts as a stay), and every ward-to-ward movement with its patient count
 start12, end12 = window_12m(latest)
@@ -178,15 +161,10 @@ for area, g in sorted(w12.groupby("home_area"), key=lambda kv: -len(kv[1]))[:2]:
     check(f"home area {area}, 12 m: ESBL cases/n", rate(g, ESBL_BASE, "esbl"),
           (areas[area]["esbl"]["cases"], areas[area]["esbl"]["n"]))
 
-# 11. Weekly summary: the same 7-day findings as the worklist, and results flagged in those 7 days
+# 11. Weekly summary: the same 7-day findings as the worklist
 wk = api("weekly")
 check("weekly summary: findings by carrier status", raw_counts,
       pd.Series([f["status"] for f in wk["findings"]], dtype=object).value_counts().to_dict())
-week_ids = set(iso.loc[iso.sample_date >= latest - pd.Timedelta(days=6), "isolate_id"])
-x_week = x[x.index.isin(week_ids)]
-sa_w, eckp_w = x_week[x_week.organism == "Staphylococcus aureus"], x_week[x_week.organism.isin(ESBL_BASE)]
-check("weekly summary: ceftriaxone-R without ESBL/CPE (confirm)",
-      int(((eckp_w.CRO == "R") & (eckp_w.esbl != 1) & (eckp_w.cpe != 1)).sum()), wk["checks"]["confirm"])
 
 # Custom date range (date filter): each patient's organism counts once within the chosen dates
 for start, end in [("2026-01-01", "2026-03-31"), ("2024-10-01", "2025-09-30")]:
@@ -194,6 +172,21 @@ for start, end in [("2026-01-01", "2026-03-31"), ("2024-10-01", "2025-09-30")]:
     k = api("overview", date_from=start, date_to=end)["kpis"]
     check(f"custom dates {start} to {end}: first isolates", len(w), k["first_isolates"])
     check(f"custom dates {start} to {end}: MRSA cases/n", rate(w, MRSA_BASE, "mrsa"), (k["mrsa"]["cases"], k["mrsa"]["n"]))
+
+# Quick search: the instant answers shown in the search list
+w12 = first_in_window(*window_12m(latest))
+x12 = sus.merge(w12[["isolate_id", "organism"]], on=["isolate_id", "organism"])
+tmp = x12[(x12.organism == "Escherichia coli") & (x12.antibiotic_code == "TMP")]
+r = next(r for r in api("search", q="coli trimethoprim")["results"] if r["kind"] == "pair")
+check("search 'coli trimethoprim': resistant/tested last 12 m", (int((tmp.result == "R").sum()), len(tmp)),
+      (round(r["pct"] * r["n"]), r["n"]))
+icu = next(r for r in api("search", q="icu")["results"] if r["kind"] == "ward")
+check("search 'icu': MRSA cases/n last 12 m", rate(w12[w12.ward_code == "ICU"], MRSA_BASE, "mrsa"),
+      (icu["mrsa"]["cases"], icu["mrsa"]["n"]))
+pt = next(r for r in api("search", q="P003612")["results"] if r["kind"] == "patient")
+mr = iso[(iso.patient_id == "P003612") & (iso.mrsa == 1)].sample_date
+check("search 'P003612': first MRSA positive (new carrier)", mr.min().date().isoformat(),
+      next(f["sample_date"] for f in pt["findings"] if f["phenotype"] == "mrsa" and f["status"] == "new"))
 
 # ---------- Report ----------
 width = max(len(r[0]) for r in rows)

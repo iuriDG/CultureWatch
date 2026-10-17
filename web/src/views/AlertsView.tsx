@@ -9,10 +9,11 @@ import type { AlertsResp, Phenotype } from '../types'
 
 const PHENOTYPES: Phenotype[] = ['mrsa', 'esbl', 'vre', 'cpe']
 
-export function AlertsView({ myWard }: { myWard: string | null }) {
+export function AlertsView({ myWard, initialPhenotype }: { myWard: string | null; initialPhenotype?: string | null }) {
   const { meta, wardName, specimenName } = useMeta()
   const { t } = useT()
-  const [phenotype, setPhenotype] = useState<Phenotype>('mrsa')
+  const [phenotype, setPhenotype] = useState<Phenotype>(
+    (['mrsa', 'esbl', 'vre', 'cpe'] as const).find(p => p === initialPhenotype) ?? 'mrsa')
   const [specimen, setSpecimen] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
   const { data, error, loading } = useApi<AlertsResp>('/api/alerts', { phenotype, specimen })

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { replaceHashParams } from '../hashParams'
 import { useApi } from '../api'
 import { DataTable } from '../components/DataTable'
 import { ExpiryWatch } from '../components/ExpiryWatch'
@@ -9,10 +10,16 @@ import { pct, pText, pValue, shortOrg } from '../format'
 import { filterParams, useMeta, useT, type Filters } from '../state'
 import type { ExpiryResp, TrendResp, TrendSummaryRow } from '../types'
 
-export function TrendsView({ filters, setFilters }: { filters: Filters; setFilters: (f: Filters) => void }) {
+export function TrendsView({ filters, setFilters, initialPair }: {
+  filters: Filters
+  setFilters: (f: Filters) => void
+  initialPair?: { organism: string; antibiotic: string }
+}) {
   const { meta, abLabel } = useMeta()
   const { t } = useT()
-  const [pair, setPair] = useState({ organism: 'Escherichia coli', antibiotic: 'TMP' })
+  const [pair, setPair] = useState(initialPair ?? { organism: 'Escherichia coli', antibiotic: 'TMP' })
+  // Keep the chosen pair in the address, so this trend can be bookmarked or shared.
+  useEffect(() => replaceHashParams({ org: pair.organism, ab: pair.antibiotic }), [pair])
   const params = filterParams(filters, ['time'])
   const trend = useApi<TrendResp>('/api/trend', { ...params, ...pair })
   const summary = useApi<TrendSummaryRow[]>('/api/trend-summary', params)

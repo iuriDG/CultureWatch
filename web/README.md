@@ -18,8 +18,7 @@ The tabs are grouped by who uses them. Infection control and Analysis have small
 | **Infection control → Findings** | The infection unit's to-do list: every new resistant bacterium found, whether the patient is a **new or known carrier**, and checkboxes for who has been told (infection unit, ward, home municipality). Search by patient, ward or organism. |
 | **Infection control → Alerts** | Every ward at once: which wards have more cases than normal right now, and every alert in the past. |
 | **Infection control → Spread** | Where new carriers had been in the 30 days before their finding, as a flow chart: wards on the left, the ward where they were found on the right, wider band = more patients. Each ward has its own colour; point at a ward or band to highlight it. |
-| **Infection control → Weekly summary** | The last 7 days on one printable page: wards on alert, new resistant findings, results to check. |
-| **Lab → Result checks** | The checks a lab scientist does before releasing results, run on every isolate: results that contradict each other (e.g. marked MRSA but the cefoxitin test says susceptible), results that are biologically impossible (susceptible to a drug the species naturally resists), and unusual resistance that needs a confirmation test. Based on EUCAST rules. Short labels, full text on hover. |
+| **Infection control → Weekly summary** | The last 7 days on one printable page: wards on alert and new resistant findings. |
 | **Analysis → Hospital** | The big picture: totals, ward "hotspots", resistance by the patient's home area, hospital vs outpatient resistance. |
 | **Analysis → Antibiogram** | A colour table: for each bacterium and each antibiotic, how often the antibiotic **fails** (green = rarely, red = often). Print it as a one-page PDF. |
 | **Analysis → Treatment guide** | Pick an infection type (e.g. bladder infection in a woman): which antibiotic would have worked for most past patients. |
@@ -29,6 +28,8 @@ The tabs are grouped by who uses them. Infection control and Analysis have small
 
 **Extras in the top bar**
 
+- **Quick search:** type a ward, a bacterium, an antibiotic, MRSA/ESBL/VRE/CPE or a patient ID (or press `/`). The answer appears in the list straight away, for example *"E. coli + trimethoprim: 20.1% resistant, over the 20% limit since ~Jan 2026"*. Press Enter to open the full view.
+- **Copy link:** every view has its own address, filters included. Copy it, bookmark it or send it, and it opens the same view again.
 - **Historical replay:** rewind to any week and press Play. The whole app shows what it *would have shown* on that day. The **Replay a past outbreak** button on the start page opens the ICU and plays until its MRSA alert fires (March 2026).
 - **Custom dates:** next to *Last 4 weeks*, *Last 12 months* and so on, choose **Custom dates** and pick any From and To day.
 - **FI / EN:** the whole app works in Finnish and English.
@@ -108,7 +109,8 @@ The web app needs no API keys or passwords. Through the public share link people
 ```
 web/
 ├── src/App.tsx          top bar, grouped tabs, language, historical replay
-├── src/views/           one file per tab (WardView, FindingsView, SpreadView, WeeklyView, ChecksView, ...)
+├── src/views/           one file per tab (WardView, FindingsView, SpreadView, WeeklyView, ...)
+├── src/hashParams.ts    the address of each view (route + filters), for links and bookmarks
 ├── src/components/      reusable parts: charts, paged tables, filters, replay bar, QR dialog
 ├── src/strings.ts       every piece of text, in English and Finnish
 ├── src/format.ts        how numbers and dates are written in each language

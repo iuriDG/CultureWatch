@@ -185,12 +185,6 @@ export function ImportView() {
             <div><strong>{t.imp.failed}</strong><ul>{report.errors.map(e => <li key={e}>{e}</li>)}</ul></div>
           </div>
         ))}
-        {report?.result_checks && (
-          <div className={`banner ${report.result_checks.contradiction + report.result_checks.impossible ? 'critical' : 'good'}`}>
-            <Status kind={report.result_checks.contradiction + report.result_checks.impossible ? 'critical' : 'good'}>{t.checks.importTitle}</Status>
-            <span>{t.checks.importLine(num(report.result_checks.checked), report.result_checks.contradiction, report.result_checks.impossible, report.result_checks.confirm)}</span>
-          </div>
-        )}
         {report && report.warnings.length > 0 && (
           <div className="banner warning"><Status kind="muted">{t.imp.warnings}</Status><ul>{report.warnings.map(w => <li key={w}>{w}</li>)}</ul></div>
         )}

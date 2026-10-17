@@ -64,26 +64,6 @@ export function WeeklyView() {
         />
       </section>
 
-      <section className="card">
-        <div className="card-head">
-          <h3>{t.weekly.checks}</h3>
-          <p>{t.weekly.checksLine(data.checks.contradiction, data.checks.impossible, data.checks.confirm)}</p>
-        </div>
-        <DataTable
-          rows={data.checks_flagged}
-          rowKey={r => r.isolate_id + r.rule + r.antibiotic_code}
-          pageSize={500}
-          empty={t.weekly.noChecks}
-          columns={[
-            { key: 'd', header: t.findings.date, render: r => date(r.sample_date), sort: r => r.sample_date },
-            { key: 'i', header: t.checks.isolate, render: r => <span className="num">{r.isolate_id}</span> },
-            { key: 'w', header: t.common.ward, render: r => wardName(r.ward_code) },
-            { key: 'o', header: t.common.organism, render: r => <span className="italic">{shortOrg(r.organism)}</span> },
-            { key: 'r', header: t.checks.result, render: r => <span className="num">{r.antibiotic_code} {r.result ?? '–'}</span> },
-            { key: 'c', header: t.checks.rule, render: r => t.checks.rulesShort[r.rule] ?? r.rule },
-          ]}
-        />
-      </section>
 
       <p className="small muted">{t.weekly.generated(date(data.end))}</p>
     </div>

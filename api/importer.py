@@ -17,7 +17,6 @@ import pandas as pd
 
 import cw_utils as cw
 import preprocess as pp
-import result_checks as rc
 
 TABLES = ["patients", "cultures", "isolates", "susceptibility", "wards", "antibiotics"]
 REQUIRED = list(pp.REQUIRED_COLUMNS)  # patients, cultures, isolates, susceptibility
@@ -125,21 +124,10 @@ def check(mode: str) -> tuple[dict, dict | None]:
     except pp.DataValidationError as e:
         report["errors"] = [ln.strip() for ln in str(e).splitlines()
                             if ln.strip() and not ln.startswith("Data validation failed")]
-    if (STAGING / "isolates.csv").exists() and (STAGING / "susceptibility.csv").exists():
-        # Lab-scientist rules on the uploaded isolates (information only: they never block an import)
-        try:
-            ev = rc.evaluate(_read(STAGING / "isolates.csv", "isolates"), _read(STAGING / "susceptibility.csv", "susceptibility"))
-            report["result_checks"] = dict(**rc.category_counts(ev), examples=records_of(ev[ev.flagged].head(10)))
-        except (KeyError, ValueError):
-            pass  # files without the needed columns: the column checks above already report it
     lines = [ln.strip() for ln in out.getvalue().splitlines() if ln.strip()]
     report["warnings"] = [ln.replace("WARNING: ", "") for ln in lines if ln.startswith("WARNING")]
     report["passed"] = next((ln for ln in lines if "checks passed" in ln), None)
     return report, (tables if report["ok"] else None)
-
-
-def records_of(df):
-    return json.loads(df.to_json(orient="records"))
 
 
 def apply(mode: str) -> dict:

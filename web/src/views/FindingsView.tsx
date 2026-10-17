@@ -38,11 +38,11 @@ function useNotified() {
 
 const PHENOTYPES: Phenotype[] = ['mrsa', 'esbl', 'vre', 'cpe']
 
-export function FindingsView() {
+export function FindingsView({ initialQuery = '', allTime = false }: { initialQuery?: string; allTime?: boolean }) {
   const { meta, wardName, specimenName } = useMeta()
   const { t, lang } = useT()
   const [days, setDays] = useState(7)
-  const [range, setRange] = useState<Range | null>(null)
+  const [range, setRange] = useState<Range | null>(allTime ? [meta.date_min, meta.date_max] : null)
   const [phenotype, setPhenotype] = useState<Phenotype | ''>('')
   const [ward, setWard] = useState('')
   const [notified, toggle] = useNotified()
@@ -155,6 +155,7 @@ export function FindingsView() {
         </div>
         <DataTable
           rows={f}
+          initialQuery={initialQuery}
           rowKey={r => r.finding_id}
           search={r => [r.patient_id, wardName(r.ward_code), r.ward_code, r.organisms, PHENOTYPE_LABEL[r.phenotype], specimenName(r.specimen), t.findings.status[r.status]].join(' ')}
           highlight={r => isNew(r) && !notified[r.finding_id]?.iu}

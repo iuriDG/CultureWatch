@@ -78,34 +78,6 @@ export interface ImportStatus {
   required: string[]
 }
 
-export type CheckCategory = 'contradiction' | 'impossible' | 'confirm'
-
-export interface CheckCounts {
-  checked: number
-  contradiction: number
-  impossible: number
-  confirm: number
-}
-
-export interface ChecksResp {
-  start: string
-  end: string
-  counts: CheckCounts
-  rules: { rule: string; checked: number; flagged: number; category: CheckCategory; basis: string }[]
-  flagged: {
-    isolate_id: string
-    rule: string
-    antibiotic_code: string
-    result: string | null
-    category: CheckCategory
-    patient_id: string
-    sample_date: string
-    ward_code: string
-    specimen: string
-    organism: string
-  }[]
-}
-
 export interface ImportReport {
   mode: 'append' | 'replace'
   ok: boolean
@@ -116,7 +88,6 @@ export interface ImportReport {
   date_max: string | null
   passed: string | null
   applied?: boolean
-  result_checks?: CheckCounts & { examples: { isolate_id: string; rule: string }[] }
 }
 
 export interface TimelineAlert {
@@ -366,6 +337,20 @@ export interface WeeklyResp {
   end: string
   findings: Finding[]
   alerts: { ward_code: string; phenotype: Phenotype; observed: number; expected: number; p_value: number }[]
-  checks: { checked: number; contradiction: number; impossible: number; confirm: number }
-  checks_flagged: { isolate_id: string; patient_id: string; sample_date: string; ward_code: string; organism: string; rule: string; category: string; antibiotic_code: string; result: string | null }[]
+}
+
+export type SearchResult =
+  | { kind: 'pair'; organism: string; antibiotic_code: string; n: number; pct: number | null; intrinsic: boolean;
+      status: 'crossing' | 'crossed' | 'rising' | null; cross_date: string | null; months_left: number | null }
+  | { kind: 'organism'; organism: string; first_isolates: number; top: { antibiotic_code: string; pct: number }[] }
+  | { kind: 'antibiotic'; antibiotic_code: string; top: { organism: string; pct: number }[] }
+  | { kind: 'ward'; ward_code: string; first_isolates: number; mrsa: Rate; esbl: Rate; alerts: Phenotype[] }
+  | { kind: 'phenotype'; phenotype: Phenotype; alert_wards: string[]; cases_4w: number }
+  | { kind: 'patient'; patient_id: string; samples: number; last_date: string; last_ward: string;
+      findings: { phenotype: Phenotype; status: 'new' | 'known' | 'repositive'; sample_date: string; ward_code: string }[] }
+
+export interface SearchResp {
+  q: string
+  as_of: string
+  results: SearchResult[]
 }
