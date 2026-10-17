@@ -160,7 +160,6 @@ export function App() {
                 ))}
               </div>
               {SHOW_SHARE && <button type="button" className="btn" onClick={() => setSharing(true)}>{t.app.share}</button>}
-              <span className="synthetic" title={t.app.syntheticTitle}>{t.app.synthetic}</span>
             </header>
             <nav className="nav" aria-label="Views">
               {GROUPS.map(g => (

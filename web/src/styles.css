@@ -158,7 +158,6 @@ a { color: var(--focus); text-underline-offset: 2px; } /* not the browser's blue
 .brand-mark { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); position: relative; }
 .brand-mark::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: var(--surface); }
 .header-spacer { flex: 1; }
-.synthetic { font-size: 12px; color: var(--text-2); border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px; }
 .my-ward { display: flex; align-items: center; gap: 8px; }
 .my-ward label { font-size: 12px; color: var(--text-2); }
 
@@ -364,7 +363,6 @@ details summary { cursor: pointer; color: var(--text-2); }
 @media (max-width: 600px) {
   .app-header { gap: 8px 10px; padding-top: 10px; padding-bottom: 10px; }
   .app-header .header-date, .app-header .header-spacer { display: none; }
-  .app-header .synthetic { order: 1; }
   .my-ward label { display: none; }
   .my-ward select { max-width: 200px; }
   .nav { flex-wrap: wrap; overflow-x: visible; padding-left: 8px; padding-right: 8px; }
