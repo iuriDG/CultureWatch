@@ -44,7 +44,6 @@ export function FindingsView({ initialQuery = '', allTime = false, initialWard =
     <div className={loading ? 'loading' : undefined} style={{ display: 'grid', gap: 16 }}>
       <div className="view-head">
         <h1>{t.findings.title}</h1>
-        <span className="sub">{t.findings.sub}</span>
       </div>
 
       <div className="filter-bar">

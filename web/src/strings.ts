@@ -296,7 +296,6 @@ const en = {
   },
   findings: {
     title: 'Resistant findings',
-    sub: 'New MRSA, ESBL, VRE and CPE findings: who is a new carrier, who may have picked it up in hospital and where they had been.',
     period: 'Period', last7: 'Last 7 days', last28: 'Last 4 weeks', allTypes: 'All',
     newCarriers: 'New carriers', newSub: 'add to the carrier register and notify',
     known: 'Known carriers', knownSub: 'precautions should already be in place',
@@ -696,7 +695,6 @@ const fi: Strings = {
   },
   findings: {
     title: 'Moniresistentit löydökset',
-    sub: 'Uudet MRSA-, ESBL-, VRE- ja CPE-löydökset: kuka on uusi kantaja, kuka on voinut saada sen sairaalasta ja missä hän oli ollut.',
     period: 'Jakso', last7: 'Viimeiset 7 päivää', last28: 'Viimeiset 4 viikkoa', allTypes: 'Kaikki',
     newCarriers: 'Uudet kantajat', newSub: 'kirjaa kantajarekisteriin ja ilmoita',
     known: 'Tunnetut kantajat', knownSub: 'varotoimien pitäisi olla jo käytössä',
