@@ -30,7 +30,7 @@ The tabs are grouped by who uses them. Infection control and Analysis have small
 
 **Extras in the top bar**
 
-- **Quick search:** type a ward, a bacterium, an antibiotic, MRSA/ESBL/VRE/CPE or a patient ID (or press `/`). The answer appears in the list straight away, for example *"E. coli + trimethoprim: 20.1% resistant, over the 20% limit since ~Jan 2026"*. Press Enter to open the full view.
+- **Quick search:** type a ward, a bacterium, an antibiotic, MRSA/ESBL/VRE/CPE or a patient ID (or press `/`). The answer appears in the list straight away, for example *"E. coli + trimethoprim: 20.1% resistant, over the 20% limit since Jan 2026"*. Press Enter to open the full view.
 - **Copy link:** every view has its own address, filters included. Copy it, bookmark it or send it, and it opens the same view again.
 - **Historical replay:** rewind to any week and press Play. The whole app shows what it *would have shown* on that day. It opens 3 weeks before your ward's latest alert, and **Play** pauses by itself when the alert fires. Try it with the Intensive care unit as your ward: it stops on 8 Mar 2026, at the MRSA cluster.
 - **Custom dates:** next to *Last 4 weeks*, *Last 12 months* and so on, choose **Custom dates** and pick any From and To day.

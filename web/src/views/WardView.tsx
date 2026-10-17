@@ -232,7 +232,7 @@ export function WardView({ code }: { code: string }) {
             <div className="link-row">
               <span className="small secondary">{t.ward.acrossHospital}</span>
               {expiry.map(e => (
-                <GoLink key={e.organism + e.antibiotic_code} href={hashFor('trends', { org: e.organism, ab: e.antibiotic_code })}>
+                <GoLink key={e.organism + e.antibiotic_code} href={hashFor('trends', { org: e.organism, ab: e.antibiotic_code })} arrow={false}>
                   <span><span className="italic">{shortOrg(e.organism)}</span> + {abName(e.antibiotic_code)}</span>
                   <Status kind={e.status === 'crossed' ? 'critical' : 'muted'}>
                     {e.status === 'crossed'

@@ -386,7 +386,13 @@ def ward_view(code: str, specimen: str | None = None, s: Snap = Depends(snap)):
     """Own-ward page: last 4 weeks vs the ward's normal, rolling 12 months vs the year before and vs all sites."""
     if code not in set(data().wards.ward_code):
         raise HTTPException(404, f"Unknown ward {code!r}")
-    return _ward_view(code, specimen, s.latest.date().isoformat())
+    return _ward_view(code, specimen or None, s.latest.date().isoformat())
+
+
+def _with_ward(counts, code):
+    """Weekly counts with a row for `code` even when the ward has no isolates of this specimen type (all zeros),
+    e.g. a health centre and blood cultures: the page then shows zeros instead of failing."""
+    return counts if code in counts.index else counts.reindex([*counts.index, code], fill_value=0)
 
 
 @lru_cache(maxsize=512)
@@ -402,13 +408,13 @@ def _ward_view(code: str, specimen: str | None, as_of: str):
     s_iso = cw.apply_filters(s.iso, specimen=specimen)  # alert counts: first isolates per year (new cases)
     four_weeks = []
     for ph in PHENOTYPES:
-        counts = ht.weekly_counts(s_iso, ph)
+        counts = _with_ward(ht.weekly_counts(s_iso, ph), code)
         st = ht.current_status(counts).set_index("ward_code").loc[code]
         four_weeks.append(dict(phenotype=ph, observed=int(st.observed), expected=float(st.expected),
                                p_value=float(st.p_value), alert=bool(st.alert),
                                weekly=[int(x) for x in counts.loc[code].values[-26:]],
                                history=records(ht.detect_clusters(counts).query("ward_code == @code"))))
-    all_counts = s_iso.assign(flag=1).pipe(ht.weekly_counts, "flag")
+    all_counts = _with_ward(s_iso.assign(flag=1).pipe(ht.weekly_counts, "flag"), code)
     st = ht.current_status(all_counts).set_index("ward_code").loc[code]
     isolates_4w = dict(observed=int(st.observed), expected=float(st.expected),
                        weekly=[int(x) for x in all_counts.loc[code].values[-26:]])
