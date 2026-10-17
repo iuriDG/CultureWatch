@@ -225,7 +225,7 @@ export function WardView({ code }: { code: string }) {
           <span className="range">{dateRange(data.windows['12m'])}</span>
         </div>
         <div className="card" style={{ display: 'grid', gap: 12 }}>
-          <p className="small secondary">{t.ward.worksSub(meta.min_isolates)}</p>
+          <p className="small secondary">{t.ward.worksSub}</p>
           <WardGrid pairs={tm.pairs} intrinsic={tm.intrinsic} organismOrder={tm.organism_mix.map(o => o.organism)} />
           <BandLegend><span>{t.abg.urineOnly}</span></BandLegend>
           {expiry.length > 0 && (

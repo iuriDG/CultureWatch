@@ -165,7 +165,7 @@ const en = {
     // Page sections, in order of importance
     rightNow: 'Right now: last 4 weeks',
     worksTitle: 'Which antibiotics work here: last 12 months',
-    worksSub: (n: number) => `% resistant on this ward, most common bacteria first · a % needs at least ${n} isolates · click a cell for the trend in the whole hospital`,
+    worksSub: 'Click a cell for the trend in the whole hospital',
     worksNone: (n: number) => `No bacterium reaches ${n} isolates on this ward in the last 12 months. Try "All specimens".`,
     acrossHospital: 'Across the hospital:',
     treatLink: 'Best choice by infection type (Treatment guide)',
@@ -570,7 +570,7 @@ const fi: Strings = {
     noHistory: 'Tällä osastolla ei ole todettu kasaumia.',
     rightNow: 'Juuri nyt: viimeiset 4 viikkoa',
     worksTitle: 'Mitkä antibiootit tehoavat täällä: viimeiset 12 kk',
-    worksSub: (n: number) => `% resistenttejä tällä osastolla, yleisimmät bakteerit ensin · prosenttiin tarvitaan vähintään ${n} isolaattia · napsauta solua nähdäksesi trendin koko sairaalassa`,
+    worksSub: 'Napsauta solua nähdäksesi trendin koko sairaalassa',
     worksNone: (n: number) => `Mikään bakteeri ei yllä ${n} isolaattiin tällä osastolla viimeisten 12 kuukauden aikana. Kokeile "Kaikki näytteet".`,
     acrossHospital: 'Koko sairaalassa:',
     treatLink: 'Paras valinta infektiotyypin mukaan (Hoito-opas)',
