@@ -69,7 +69,6 @@ export function App() {
   // Only the analysis views read the shared filters from the address (#/findings?ward=ICU must not filter them)
   const [filters, setFiltersState] = useState<Filters>(() =>
     FILTER_ROUTES.includes(readRoute()) ? filtersFromParams(readHash().params, DEFAULT_FILTERS) : DEFAULT_FILTERS)
-  const [copied, setCopied] = useState(false)
   const [asOf, setAsOf] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
 
@@ -90,13 +89,6 @@ export function App() {
     if (FILTER_ROUTES.includes(route)) replaceHashParams(filtersToParams(filters))
   }, [route, filters])
   const setFilters = (f: Filters) => setFiltersState(f)
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch { /* clipboard blocked: the address bar still shows the link */ }
-  }
 
   useEffect(() => { document.documentElement.lang = lang }, [lang])
 
@@ -137,8 +129,7 @@ export function App() {
             <header className="app-header">
               <a className="brand" href="#/ward" title={t.nav.ward}><span className="brand-mark" aria-hidden="true" />CultureWatch</a>
               <SearchBox />
-              <span className="header-spacer" />
-              <button type="button" className="btn" onClick={copyLink} title={window.location.href}>{copied ? t.app.copied : t.app.copyLink}</button>
+              <div className="header-actions">
               <button type="button" className={`btn${asOf ? '' : ' primary'}`} aria-pressed={asOf !== null}
                 onClick={() => setAsOf(asOf ? null : weeks[weeks.length - 1])}
                 title={t.app.timeMachineTitle}>
@@ -159,6 +150,7 @@ export function App() {
                 ))}
               </div>
               {SHOW_SHARE && <button type="button" className="btn" onClick={() => setSharing(true)}>{t.app.share}</button>}
+              </div>
             </header>
             <nav className="nav" aria-label="Views">
               {GROUPS.map(g => (

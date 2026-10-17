@@ -127,10 +127,16 @@ a { color: var(--focus); text-underline-offset: 2px; } /* not the browser's blue
 
 /* ---------- Shell ---------- */
 .top { position: sticky; top: 0; z-index: 10; }
+/* Top bar: brand on the left, search in the centre, controls on the right */
 .app-header {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
   padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--border);
 }
+.app-header .brand { justify-self: start; }
+.header-actions { justify-self: end; display: flex; align-items: center; gap: 12px; }
+/* Equal side columns keep the search centred; it narrows with the screen so the controls fit on one row */
+.app-header .search-box { width: clamp(240px, calc(100vw - 1080px), 520px); }
+.my-ward select { max-width: 190px; }
 
 /* ---------- Time machine ---------- */
 .replay-bar {
@@ -362,7 +368,6 @@ details summary { cursor: pointer; color: var(--text-2); }
 /* Phones: one compact header, and the tab row wraps instead of hiding Import / Methods off-screen. */
 @media (max-width: 600px) {
   .app-header { gap: 8px 10px; padding-top: 10px; padding-bottom: 10px; }
-  .app-header .header-spacer { display: none; }
   .my-ward label { display: none; }
   .my-ward select { max-width: 200px; }
   .nav { flex-wrap: wrap; overflow-x: visible; padding-left: 8px; padding-right: 8px; }
@@ -400,7 +405,7 @@ details summary { cursor: pointer; color: var(--text-2); }
 .flow-count { font-weight: 650; fill: var(--text); }
 
 /* ---------- Quick search ---------- */
-.search-box { position: relative; flex: 1 1 280px; max-width: 460px; min-width: 200px; }
+.search-box { position: relative; width: 100%; }
 .search-box input { width: 100%; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
 .search-box input:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
 .search-pop {
@@ -415,4 +420,16 @@ details summary { cursor: pointer; color: var(--text-2); }
 .search-answer { font-size: 13px; color: var(--text-2); }
 .search-open { font-size: 11px; color: var(--series-1); justify-self: end; }
 .search-head { padding: 6px 10px; font-size: 12px; color: var(--muted); }
-@media (max-width: 860px) { .search-box { order: 10; flex-basis: 100%; max-width: none; } .search-pop { min-width: 0; } }
+/* Smaller screens: brand and controls on top, the search centred on its own row */
+@media (max-width: 1320px) {
+  .app-header { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'brand actions' 'search search'; gap: 10px 16px; }
+  .app-header .brand { grid-area: brand; }
+  .header-actions { grid-area: actions; flex-wrap: wrap; justify-content: flex-end; }
+  .app-header .search-box { grid-area: search; justify-self: center; width: min(100%, 560px); }
+}
+/* Phones: logo, then the controls, then the search, each on its own row */
+@media (max-width: 600px) {
+  .app-header { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'brand' 'actions' 'search'; }
+  .header-actions { justify-self: start; justify-content: flex-start; gap: 8px 10px; }
+}
+@media (max-width: 860px) { .search-pop { min-width: 0; } }
