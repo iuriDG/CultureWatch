@@ -130,7 +130,7 @@ export function App() {
               <a className="brand" href="#/ward" title={t.nav.ward}><span className="brand-mark" aria-hidden="true" />CultureWatch</a>
               <SearchBox />
               <div className="header-actions">
-              <button type="button" className={`btn${asOf ? '' : ' primary'}`} aria-pressed={asOf !== null}
+              <button type="button" className={`btn replay-btn${asOf ? '' : ' primary'}`} aria-pressed={asOf !== null}
                 onClick={() => setAsOf(asOf ? null : weeks[weeks.length - 1])}
                 title={t.app.timeMachineTitle}>
                 {asOf ? t.app.exitTimeMachine : t.app.timeMachine}

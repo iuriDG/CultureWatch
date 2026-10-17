@@ -427,9 +427,14 @@ details summary { cursor: pointer; color: var(--text-2); }
   .header-actions { grid-area: actions; flex-wrap: wrap; justify-content: flex-end; }
   .app-header .search-box { grid-area: search; justify-self: center; width: min(100%, 560px); }
 }
-/* Phones: logo, then the controls, then the search, each on its own row */
-@media (max-width: 600px) {
-  .app-header { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'brand' 'actions' 'search'; }
-  .header-actions { justify-self: start; justify-content: flex-start; gap: 8px 10px; }
+/* Small screens (the controls no longer fit beside the logo): three tidy rows
+   logo · FI/EN   /   Historical replay · my ward   /   search */
+@media (max-width: 700px) {
+  .app-header { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'brand lang' 'replay ward' 'search search'; gap: 10px 12px; }
+  .header-actions { display: contents; }
+  .header-actions > .replay-btn { grid-area: replay; justify-self: start; }
+  .header-actions > .my-ward { grid-area: ward; justify-self: end; min-width: 0; }
+  .header-actions > .segmented { grid-area: lang; justify-self: end; }
 }
+@media (max-width: 380px) { .my-ward select { max-width: 160px; } }
 @media (max-width: 860px) { .search-pop { min-width: 0; } }
