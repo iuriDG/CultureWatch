@@ -362,7 +362,7 @@ details summary { cursor: pointer; color: var(--text-2); }
 /* Phones: one compact header, and the tab row wraps instead of hiding Import / Methods off-screen. */
 @media (max-width: 600px) {
   .app-header { gap: 8px 10px; padding-top: 10px; padding-bottom: 10px; }
-  .app-header .header-date, .app-header .header-spacer { display: none; }
+  .app-header .header-spacer { display: none; }
   .my-ward label { display: none; }
   .my-ward select { max-width: 200px; }
   .nav { flex-wrap: wrap; overflow-x: visible; padding-left: 8px; padding-right: 8px; }

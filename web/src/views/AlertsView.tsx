@@ -8,6 +8,7 @@ import { useMeta, useT } from '../state'
 import type { AlertsResp, Phenotype } from '../types'
 
 const PHENOTYPES: Phenotype[] = ['mrsa', 'esbl', 'vre', 'cpe']
+const SHOWN_WEEKS = 56 // what the alert test looks at: the ward's previous 52 weeks and the latest 4
 
 export function AlertsView({ myWard, initialPhenotype }: { myWard: string | null; initialPhenotype?: string | null }) {
   const { meta, wardName, specimenName } = useMeta()
@@ -113,11 +114,15 @@ export function AlertsView({ myWard, initialPhenotype }: { myWard: string | null
         <div className="card">
           <div className="card-head">
             <h3>{t.alerts.weekly(label, wardName(ward))}</h3>
-            <p>{t.alerts.weeklySub}</p>
+            <div className="legend">
+              <span><span className="sw" style={{ background: 'var(--series-1)' }} />{t.alerts.keyRecent}</span>
+              <span><span className="line-key" style={{ borderTopStyle: 'dashed', borderTopWidth: 1.5, color: 'var(--text-2)' }} />{t.alerts.keyUsual}</span>
+              <span><span className="sw" style={{ background: 'var(--critical)', height: 4 }} />{t.alerts.keyAlert}</span>
+            </div>
           </div>
           <WeeklyColumns
-            values={data.counts[ward] ?? []}
-            weeks={data.weeks}
+            values={(data.counts[ward] ?? []).slice(-SHOWN_WEEKS)}
+            weeks={data.weeks.slice(-SHOWN_WEEKS)}
             alertWeeks={alertWeeks}
             usualPerWeek={wardStatus ? wardStatus.expected / 4 : undefined}
             height={200}

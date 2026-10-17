@@ -4,7 +4,7 @@ import { AsOfContext, useApi } from './api'
 import { SearchBox } from './components/SearchBox'
 import { ShareDialog } from './components/ShareDialog'
 import { TimeMachine } from './components/TimeMachine'
-import { date, setFormatLang } from './format'
+import { setFormatLang } from './format'
 import {
   DEFAULT_FILTERS, LangContext, loadLang, loadMyWard, makeMetaHelpers, MetaContext, saveLang, saveMyWard, type Filters,
 } from './state'
@@ -136,7 +136,6 @@ export function App() {
           <div className={`top${asOf ? ' replaying' : ''}`}>
             <header className="app-header">
               <a className="brand" href="#/ward" title={t.nav.ward}><span className="brand-mark" aria-hidden="true" />CultureWatch</a>
-              <span className="muted small header-date">{asOf ? t.app.replaying(date(asOf)) : t.app.dataThrough(date(helpers.meta.date_max))}</span>
               <SearchBox />
               <span className="header-spacer" />
               <button type="button" className="btn" onClick={copyLink} title={window.location.href}>{copied ? t.app.copied : t.app.copyLink}</button>

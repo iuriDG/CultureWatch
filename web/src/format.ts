@@ -58,6 +58,12 @@ export function date(iso: string, withYear = true): string {
   return `${d} ${MONTHS_EN[m - 1]}${withYear ? ` ${y}` : ''}`
 }
 
+/** '2026-02-09' -> 'Feb' / 'helmi' (short month for chart axes) */
+export function monthShort(iso: string): string {
+  const [, m] = parts(iso)
+  return LANG === 'fi' ? MONTHS_FI[m - 1] : MONTHS_EN[m - 1]
+}
+
 /** '2027-04-12' -> 'Apr 2027' / 'huhtikuu 2027' */
 export function monthYear(iso: string): string {
   const [y, m] = parts(iso)

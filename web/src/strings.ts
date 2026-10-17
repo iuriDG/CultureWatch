@@ -6,8 +6,6 @@ export type Lang = 'en' | 'fi'
 const en = {
   lang: { en: 'English', fi: 'Suomi', label: 'Language' },
   app: {
-    dataThrough: (d: string) => `Data through ${d}`,
-    replaying: (d: string) => `Replaying ${d}`,
     timeMachine: 'Historical replay',
     exitTimeMachine: 'Exit replay',
     timeMachineTitle: 'Replay the data week by week and watch alerts fire',
@@ -105,7 +103,6 @@ const en = {
   charts: {
     weekOf: (d: string) => `Week of ${d}`,
     alertWeek: 'Alert raised this week',
-    usual: 'usual',
     resistant: (p: string) => `${p} resistant`,
     ofTested: (r: string, n: string) => `${r} of ${n} tested`,
     unreliable: (n: number) => `n<${n}: too few to be reliable`,
@@ -187,7 +184,7 @@ const en = {
     noHistory: (ph: string) => `No ${ph} clusters flagged in the whole period.`,
     windowEnding: 'Window ending',
     weekly: (ph: string, ward: string) => `${ph} cases per week · ${ward}`,
-    weeklySub: 'red ticks under the axis = weeks an alert was raised · dashed = usual weekly level now',
+    keyRecent: 'Last 4 weeks', keyUsual: 'Usual level', keyAlert: 'Alert raised',
   },
   abg: {
     title: 'Antibiogram',
@@ -397,8 +394,6 @@ export type Strings = typeof en
 const fi: Strings = {
   lang: { en: 'English', fi: 'Suomi', label: 'Kieli' },
   app: {
-    dataThrough: (d: string) => `Tiedot ${d} asti`,
-    replaying: (d: string) => `Toisto: ${d}`,
     timeMachine: 'Historiatoisto',
     exitTimeMachine: 'Sulje toisto',
     timeMachineTitle: 'Toista aineisto viikko kerrallaan ja katso hälytysten syttyvän',
@@ -496,7 +491,6 @@ const fi: Strings = {
   charts: {
     weekOf: (d: string) => `Viikko alkaen ${d}`,
     alertWeek: 'Hälytys tällä viikolla',
-    usual: 'tavallinen',
     resistant: (p: string) => `${p} resistenttejä`,
     ofTested: (r: string, n: string) => `${r}/${n} testatuista`,
     unreliable: (n: number) => `n<${n}: liian vähän luotettavaan arvioon`,
@@ -577,7 +571,7 @@ const fi: Strings = {
     noHistory: (ph: string) => `${ph}-kasaumia ei todettu koko jakson aikana.`,
     windowEnding: 'Jakso päättyi',
     weekly: (ph: string, ward: string) => `${ph}-tapaukset viikoittain · ${ward}`,
-    weeklySub: 'punaiset merkit akselin alla = hälytysviikot · katkoviiva = nykyinen tavallinen viikkotaso',
+    keyRecent: 'Viimeiset 4 viikkoa', keyUsual: 'Tavallinen taso', keyAlert: 'Hälytys',
   },
   abg: {
     title: 'Antibiogrammi',

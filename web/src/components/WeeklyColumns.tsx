@@ -1,4 +1,4 @@
-import { date, weekStart } from '../format'
+import { date, monthShort, weekStart } from '../format'
 import { useT } from '../state'
 import { useTooltip } from './Tooltip'
 import { useWidth } from './useWidth'
@@ -38,7 +38,7 @@ export function WeeklyColumns({ values, weeks, emphasizeLast = 4, usualPerWeek, 
   const gap = band > 6 ? 2 : band > 3 ? 1 : 0
   const bw = Math.min(24, Math.max(band - gap, 1))
   const ticks = compact ? [] : niceTicks(top)
-  const labelEvery = Math.ceil(n / Math.max(Math.floor(iw / 70), 1))
+  const months = compact ? [] : monthTicks(weeks, band)
 
   return (
     <div className="chart" ref={ref}>
@@ -61,15 +61,14 @@ export function WeeklyColumns({ values, weeks, emphasizeLast = 4, usualPerWeek, 
         {usualPerWeek !== undefined && usualPerWeek > 0 && (
           <g>
             <line x1={m.l} x2={m.l + iw} y1={y(usualPerWeek)} y2={y(usualPerWeek)} stroke="var(--text-2)" strokeWidth={1} strokeDasharray="3 3" />
-            {!compact && <text x={m.l + 4} y={y(usualPerWeek) - 4} style={{ fill: 'var(--text-2)' }}>{t.charts.usual}</text>}
           </g>
         )}
         {alertWeeks && weeks.map((w, i) => alertWeeks.has(w) ? (
           <rect key={`a${i}`} x={m.l + i * band} y={m.t + ih + 2} width={Math.max(band, 2)} height={3} fill="var(--critical)" />
         ) : null)}
-        {!compact && weeks.map((w, i) => i % labelEvery === 0 ? (
-          <text key={`l${i}`} x={m.l + i * band + band / 2} y={height - 6} textAnchor="middle">{date(weekStart(w), false)}</text>
-        ) : null)}
+        {months.map(({ i, text }) => (
+          <text key={`l${i}`} x={m.l + i * band} y={height - 6} textAnchor="start">{text}</text>
+        ))}
         {/* hit targets: the full band, bigger than the mark */}
         {values.map((v, i) => (
           <rect
@@ -93,6 +92,27 @@ export function WeeklyColumns({ values, weeks, emphasizeLast = 4, usualPerWeek, 
       {tip.node}
     </div>
   )
+}
+
+/** Where each month's weeks start on the axis: the year where a year starts (and on the first label), the short
+ *  month elsewhere; labels too close together are skipped, never the year ones. */
+function monthTicks(weeks: string[], band: number, minGap = 44): { i: number; text: string }[] {
+  const out: { i: number; text: string; year: boolean }[] = []
+  let prev = ''
+  weeks.forEach((w, i) => {
+    const start = weekStart(w)
+    if (start.slice(0, 7) === prev) return
+    prev = start.slice(0, 7)
+    const first = out.length === 0, january = start.slice(5, 7) === '01'
+    const tick = { i, year: first || january, text: first && !january ? `${monthShort(start)} ${start.slice(0, 4)}` : january ? start.slice(0, 4) : monthShort(start) }
+    const last = out[out.length - 1]
+    if (last && (i - last.i) * band < minGap) {
+      if (tick.year && !last.year) out[out.length - 1] = tick // keep the year, drop the month before it
+      return
+    }
+    out.push(tick)
+  })
+  return out
 }
 
 function niceTicks(top: number): number[] {
