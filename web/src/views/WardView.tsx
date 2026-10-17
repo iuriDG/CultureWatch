@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApi } from '../api'
 import { BarList } from '../components/BarList'
 import { DataTable, type Column } from '../components/DataTable'
+import { GoLink } from '../components/GoLink'
 import { Status } from '../components/Status'
 import { BandLegend, WardGrid } from '../components/WardGrid'
 import { WeeklyColumns } from '../components/WeeklyColumns'
@@ -181,7 +182,7 @@ export function WardView({ code }: { code: string }) {
               <h3>{t.ward.findingsTitle}</h3>
               <p>{t.ward.findingsSub}</p>
             </div>
-            <a href={hashFor('findings', { ward: code, days: '28' })}>{t.ward.openFindings} →</a>
+            <GoLink href={hashFor('findings', { ward: code, days: '28' })}>{t.ward.openFindings}</GoLink>
           </div>
           <DataTable rows={findings} columns={findingCols} rowKey={r => r.finding_id} initialSort={{ key: 'd', desc: true }}
             highlight={r => r.status !== 'known'} empty={t.ward.findingsNone} pageSize={10} />
@@ -243,7 +244,7 @@ export function WardView({ code }: { code: string }) {
               ))}
             </p>
           )}
-          <div className="link-row"><a href={hashFor('treatment')}>{t.ward.treatLink} →</a></div>
+          <div className="link-row"><GoLink href={hashFor('treatment')}>{t.ward.treatLink}</GoLink></div>
         </div>
       </section>
 
