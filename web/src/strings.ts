@@ -223,7 +223,7 @@ const en = {
   abg: {
     title: 'Antibiogram',
     sub: '% of first isolates resistant, per organism and antibiotic',
-    bandsTitle: '% resistant (European EARS-Net bands):',
+    bandsTitle: 'Resistant (European EARS-Net bands):',
     bands: ['<1%', '1–<5%', '5–<10%', '10–<25%', '25–<50%', '≥50%'],
     over: 'Bold = over 20%: not for starting before the test result',
     clickTip: 'Click a cell to see its trend over time',
@@ -649,7 +649,7 @@ const fi: Strings = {
   abg: {
     title: 'Antibiogrammi',
     sub: '% resistenttejä ensimmäisistä isolaateista, mikrobeittain ja antibiooteittain',
-    bandsTitle: '% resistenttejä (eurooppalaiset EARS-Net-luokat):',
+    bandsTitle: 'Resistenttejä (eurooppalaiset EARS-Net-luokat):',
     bands: ['<1 %', '1–<5 %', '5–<10 %', '10–<25 %', '25–<50 %', '≥50 %'],
     over: 'Lihavoitu = yli 20 %: ei aloiteta ennen testitulosta',
     clickTip: 'Napsauta solua nähdäksesi sen trendin',
