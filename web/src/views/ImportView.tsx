@@ -17,6 +17,12 @@ const ALIASES: [string, string][] = [
   ['antibiotic', 'antibiotics'], ['antibioot', 'antibiotics'],
 ]
 
+const DownloadIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+    <path d="M8 2.5v7.5m0 0 3.2-3.2M8 10 4.8 6.8M2.5 13.5h11" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
 function tableFor(fileName: string): string | null {
   const n = fileName.toLowerCase()
   return ALIASES.find(([key]) => n.includes(key))?.[1] ?? null
@@ -166,12 +172,14 @@ export function ImportView() {
           </>
         )}
 
-        <p className="small secondary">
-          {t.imp.templates}{' '}
-          {(status?.tables ?? []).map((tb, i) => (
-            <span key={tb}>{i > 0 && ' · '}<a href={`/api/import/template/${tb}`} download={`${tb}.csv`}>{tb}.csv</a></span>
+        <div className="link-row">
+          <span className="small secondary">{t.imp.templates}</span>
+          {(status?.tables ?? []).map(tb => (
+            <a key={tb} className="mini-btn" href={`/api/import/template/${tb}`} download={`${tb}.csv`} title={t.imp.tableNames[tb] ?? tb}>
+              <DownloadIcon />{tb}.csv
+            </a>
           ))}
-        </p>
+        </div>
       </div>
 
       <div className="card" style={{ display: 'grid', gap: 12 }}>
