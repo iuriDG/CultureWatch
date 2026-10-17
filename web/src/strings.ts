@@ -289,7 +289,7 @@ const en = {
     above: 'Above 20%, not rising',
     now: 'Now', perYear: 'Per year', outlook: 'Outlook', show: 'Show on chart',
     none: 'No antibiotic is rising towards the 20% limit with these filters.',
-    note: 'A date is only projected when the rise is clear; it moves as new data arrives.',
+    note: 'A date is only projected when the rise is clear.',
     aboveCount: (k: number) => `${k} more ${k === 1 ? 'pair is' : 'pairs are'} already above 20% but not rising (see the antibiogram).`,
   },
   findings: {
@@ -686,7 +686,7 @@ const fi: Strings = {
     above: 'Yli 20 %, ei nousussa',
     now: 'Nyt', perYear: 'Vuodessa', outlook: 'Näkymä', show: 'Näytä kuvaajassa',
     none: 'Mikään antibiootti ei ole nousemassa kohti 20 %:n rajaa näillä suodattimilla.',
-    note: 'Päivämäärä ennustetaan vain, jos nousu on selvä; se tarkentuu uuden tiedon myötä.',
+    note: 'Päivämäärä ennustetaan vain, jos nousu on selvä.',
     aboveCount: (k: number) => `${k} muu${k === 1 ? ' pari on' : 'ta paria on'} jo yli 20 %:n mutta ei nousussa (katso antibiogrammi).`,
   },
   findings: {
