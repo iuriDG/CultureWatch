@@ -14,7 +14,6 @@ import type { Finding, FindingsResp, NowResp, Phenotype, Rate, RateTests, WardPa
 
 const SIG = 0.05
 const RARE: Phenotype[] = ['cpe', 'vre'] // one case already needs action
-const ORDER: Phenotype[] = ['mrsa', 'esbl', 'vre', 'cpe']
 
 const rising = (cur: number | null, prev: number | null, p: number | null) =>
   p !== null && p < SIG && cur !== null && prev !== null && cur > prev
@@ -55,35 +54,6 @@ function annualSignals(data: WardResp, t: Strings, abLabel: (c: string) => strin
   return out.sort((a, b) => a.p - b.p)
 }
 
-/** Plain-language summary built only from the numbers on this page (nothing generated, nothing invented),
- *  most urgent first: clusters, CPE/VRE cases, new carriers, then the 12-month picture. */
-function plainSummary(data: WardResp, t: Strings, signals: Signal[], findings: Finding[]): string[] {
-  const fw = data.four_weeks, tm = data.twelve_months
-  const lines: string[] = []
-  const alerts = fw.phenotypes.filter(p => p.alert)
-  if (alerts.length) alerts.forEach(a => lines.push(t.ward.sumAlert(t.phenotypePlain[a.phenotype], a.observed, num(a.expected, 1))))
-  else lines.push(t.ward.sumCalm)
-  for (const r of findings.filter(f => RARE.includes(f.phenotype))) lines.push(t.ward.sumRare(PHENOTYPE_LABEL[r.phenotype], date(r.sample_date)))
-  const fresh = findings.filter(f => f.status === 'new')
-  if (fresh.length) {
-    const by = ORDER.map(ph => [ph, fresh.filter(f => f.phenotype === ph).length] as const).filter(([, n]) => n > 0)
-    lines.push(t.ward.sumNew(fresh.length, by.map(([ph, n]) => `${PHENOTYPE_LABEL[ph]} ${n}`).join(', ')))
-  }
-
-  let any = false
-  for (const ph of ['esbl', 'mrsa'] as const) {
-    const r = tm.rates.ward[ph], prev = tm.rates.ward_prev[ph], all = tm.rates.all_sites[ph], ts = tm.rates.tests[ph]
-    const up = rising(r.pct, prev.pct, ts.p_change), hi = above(ts.p_above)
-    if (!up && !hi) continue
-    any = true
-    lines.push(`${t.ward.sumRate(PHENOTYPE_LABEL[ph], pct(r.pct), pct(prev.pct), pct(all.pct))} ${up && hi ? t.ward.sumUpAbove : up ? t.ward.sumUp : t.ward.sumAbove}`)
-  }
-  const pairSignals = signals.filter(s => s.key !== 'esbl' && s.key !== 'mrsa').length
-  if (pairSignals) { any = true; lines.push(t.ward.sumPairs(pairSignals)) }
-  if (!any) lines.push(t.ward.sumSteady)
-  return lines
-}
-
 /**
  * Own-ward page, ordered by what staff need first: is anything happening right now (clusters, CPE/VRE, new
  * carriers and who they are), which antibiotics still work here, is it getting worse, then the details.
@@ -105,7 +75,6 @@ export function WardView({ code }: { code: string }) {
   const rare = findings.filter(f => RARE.includes(f.phenotype))
   const alerts = fw.phenotypes.filter(p => p.alert)
   const signals = annualSignals(data, t, abLabel)
-  const summary = plainSummary(data, t, signals, findings)
   const reportable = tm.pairs.filter(p => p.reportable)
   const small = tm.pairs.filter(p => !p.reportable)
   const pairSignal = (r: WardPair) => rising(r.pct_resistant, r.pct_resistant_prev, r.p_change) || above(r.p_above)
@@ -151,11 +120,6 @@ export function WardView({ code }: { code: string }) {
           {ward.code} · {otherName} · {ward.ward_type === 'in' ? t.ward.inpatient : t.ward.outpatient} · {t.ward.dataThrough(date(data.latest))}
         </span>
       </div>
-
-      <section className="summary" aria-label={t.ward.inShort}>
-        <h2>{t.ward.inShort}</h2>
-        {summary.map((line, i) => <p key={i}>{line}</p>)}
-      </section>
 
       <div className="filter-bar">
         <div className="field">

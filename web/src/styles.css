@@ -310,14 +310,6 @@ tbody tr:hover td { background: var(--surface-2); }
 .link-row { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; align-items: baseline; }
 .link-row a { color: var(--accent); }
 
-/* ---------- Plain-language summary ---------- */
-.summary {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 14px 16px; display: grid; gap: 6px;
-}
-.summary h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-2); }
-.summary p { font-size: 15px; max-width: 900px; }
-
 /* ---------- Share dialog ---------- */
 .overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, 0.45); display: grid; place-items: center; padding: 16px; }
 .dialog {

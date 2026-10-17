@@ -15,7 +15,7 @@ The tabs are grouped by who uses them. Infection control and Analysis have small
 | Tab | What it tells you |
 |---|---|
 | **Start page** | Before you choose a ward: the **whole hospital right now**. Every ward's last 4 weeks at a glance (unusual clusters, any CPE or VRE case, new carriers), wards with something going on first, then pick your ward. |
-| **My ward** | Opens on your own ward, most important first: a short summary in plain words; **Right now** (anything unusual in the last 4 weeks, any CPE or VRE case, which patients have resistant bacteria, how many samples were sent); **Which antibiotics work here** (a colour grid for the ward's commonest bacteria); **Getting worse?** (worse than last year, or than the rest of the hospital?); then the details. |
+| **My ward** | Opens on your own ward, most important first: **Right now** (anything unusual in the last 4 weeks, any CPE or VRE case, which patients have resistant bacteria, how many samples were sent); **Which antibiotics work here** (a colour grid for the ward's commonest bacteria); **Getting worse?** (worse than last year, or than the rest of the hospital?); then the details. |
 | **Infection control → Right now** | The same whole-hospital view as the start page, for the infection unit's first check of the day. |
 | **Infection control → Findings** | Every new resistant bacterium found: whether the patient is a **new or known carrier**, picked up in hospital or not, and where they were before. Search by patient, ward or organism. |
 | **Infection control → Alerts** | Every ward at once: which wards have more cases than normal right now, and every alert in the past. |
