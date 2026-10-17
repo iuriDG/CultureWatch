@@ -171,7 +171,6 @@ export function WardView({ code }: { code: string }) {
                   <li key={r.finding_id}>{t.ward.rareItem(PHENOTYPE_LABEL[r.phenotype], r.patient_id, date(r.sample_date), t.findings.status[r.status])}</li>
                 ))}
               </ul>
-              <span className="secondary">{t.ward.rareText}</span>
             </div>
           </div>
         )}
