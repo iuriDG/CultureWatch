@@ -307,6 +307,7 @@ tbody tr:hover td { background: var(--surface-2); }
 .ward-card { text-align: left; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 14px; cursor: pointer; display: grid; gap: 4px; }
 .ward-card:hover { border-color: var(--accent); }
 .ward-card .code { font-size: 12px; color: var(--text-2); }
+.group-title { font-size: 15px; font-weight: 700; }
 .ward-card.attention { border-color: var(--critical); }
 .ward-status { display: grid; gap: 3px; margin-top: 6px; }
 .ward-status .status { white-space: normal; }

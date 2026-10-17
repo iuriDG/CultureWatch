@@ -16,9 +16,9 @@ const urgency = (w?: NowWard) => (w ? w.alerts.length * 100 + w.rare.length * 10
 /**
  * The whole hospital at a glance, for the infection unit's morning check and for a first visit: every ward's
  * last 4 weeks (cluster alerts, new carriers, any CPE or VRE case), busiest wards first.
- * With `picker`, choosing a ward makes it "my ward"; otherwise it just opens the ward's page.
+ * Choosing a ward calls onPick: on the start page it becomes "my ward", on Right now it just opens.
  */
-export function NowView({ onPick, picker = false }: { onPick: (code: string) => void; picker?: boolean }) {
+export function NowView({ onPick }: { onPick: (code: string) => void }) {
   const { meta } = useMeta()
   const { t, lang } = useT()
   const { data, error, loading } = useApi<NowResp>('/api/now')
@@ -39,14 +39,10 @@ export function NowView({ onPick, picker = false }: { onPick: (code: string) => 
         <span className="sub">{t.now.sub(dateRange(data.window))}</span>
       </div>
 
-      <section style={{ display: 'grid', gap: 12 }}>
-        <div className="view-head">
-          <h2>{picker ? t.picker.title : t.now.wardsTitle}</h2>
-          <span className="sub">{picker ? t.picker.sub : t.now.wardsSub}</span>
-        </div>
+      <section style={{ display: 'grid', gap: 16 }}>
         {groups.map(g => (
           <div key={g.title} style={{ display: 'grid', gap: 8 }}>
-            <h3 className="secondary">{g.title}</h3>
+            <h2 className="group-title">{g.title}</h2>
             <div className="ward-grid">
               {[...g.items].sort((a, b) => urgency(byCode.get(b.ward_code)) - urgency(byCode.get(a.ward_code))).map(w => {
                 const s = byCode.get(w.ward_code)

@@ -50,15 +50,12 @@ const en = {
   },
   print: { button: 'Print / save as PDF', antibiogramTitle: 'Cumulative antibiogram', filters: 'Filters', generated: (d: string) => `Generated ${d} from CultureWatch. First isolate per patient (CLSI M39); % shown only with at least 30 isolates. Synthetic data.` },
   picker: {
-    title: 'Open your ward',
-    sub: 'Pick your ward and CultureWatch opens on it every time: its last 4 weeks and last 12 months. You can change it in the top bar.',
     inpatient: 'Hospital wards',
     outpatient: 'Outpatient units',
   },
   now: {
     title: 'Right now across the hospital',
     sub: (range: string) => `Last 4 weeks on every ward · ${range}`,
-    wardsTitle: 'Wards', wardsSub: 'Select a ward to open its page.',
     chipAlert: (ph: string, n: number, x: string) => `${ph} alert: ${n} cases, usually ${x}`,
     chipRare: (ph: string, d: string) => `${ph} case ${d}`,
     chipNew: (n: number, parts: string) => `${n} new ${n === 1 ? 'carrier' : 'carriers'} (${parts})`,
@@ -456,15 +453,12 @@ const fi: Strings = {
   },
   print: { button: 'Tulosta / tallenna PDF', antibiogramTitle: 'Kumulatiivinen antibiogrammi', filters: 'Suodattimet', generated: (d: string) => `Luotu ${d} CultureWatchista. Potilaan ensimmäinen isolaatti (CLSI M39); % näytetään vain, kun isolaatteja on vähintään 30. Synteettinen aineisto.` },
   picker: {
-    title: 'Avaa oma osastosi',
-    sub: 'Valitse osastosi, niin CultureWatch avautuu siihen joka kerta: viimeiset 4 viikkoa ja 12 kuukautta. Voit vaihtaa osaston yläpalkista.',
     inpatient: 'Vuodeosastot',
     outpatient: 'Avohoidon yksiköt',
   },
   now: {
     title: 'Koko sairaalan tilanne nyt',
     sub: (range: string) => `Kaikkien osastojen viimeiset 4 viikkoa · ${range}`,
-    wardsTitle: 'Osastot', wardsSub: 'Avaa osaston sivu valitsemalla se.',
     chipAlert: (ph: string, n: number, x: string) => `${ph}-hälytys: ${n} tapausta, tavallisesti ${x}`,
     chipRare: (ph: string, d: string) => `${ph}-tapaus ${d}`,
     chipNew: (n: number, parts: string) => `${n} ${n === 1 ? 'uusi kantaja' : 'uutta kantajaa'} (${parts})`,

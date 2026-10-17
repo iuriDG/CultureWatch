@@ -185,7 +185,7 @@ export function App() {
             {/* Front page: my ward, or (no ward chosen yet) the whole hospital with a ward picker */}
             {route === 'ward' && (shownWard
               ? <WardView key={shownWard} code={shownWard} />
-              : <NowView picker onPick={setMyWard} />)}
+              : <NowView onPick={setMyWard} />)}
             {route === 'now' && <NowView onPick={code => { window.location.hash = hashFor('ward', { code }) }} />}
             {route === 'findings' && <FindingsView key={params.toString()} initialQuery={params.get('q') ?? ''} allTime={params.get('all') === '1'}
               initialWard={params.get('ward') ?? ''} initialDays={params.get('days') === '28' ? 28 : 7} />}
